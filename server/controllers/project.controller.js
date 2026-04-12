@@ -1,0 +1,452 @@
+import mongoose from 'mongoose';
+
+import Project from '../models/Project.model.js';
+import Proposal from '../models/Proposal.model.js';
+import { asyncHandler } from '../middleware/error.middleware.js';
+import ApiError from '../utils/ApiError.js';
+import ApiResponse from '../utils/ApiResponse.js';
+
+const parsePagination = (query) => {
+	const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
+	const limit = Math.min(Math.max(Number.parseInt(query.limit, 10) || 10, 1), 50);
+	const skip = (page - 1) * limit;
+
+	return { page, limit, skip };
+};
+
+const buildProjectSort = (sortBy) => {
+	if (sortBy === 'budget-high') {
+		return { 'budget.max': -1, createdAt: -1 };
+	}
+
+	if (sortBy === 'budget-low') {
+		return { 'budget.min': 1, createdAt: -1 };
+	}
+
+	return { createdAt: -1 };
+};
+
+const normalizeBudget = (budget = {}) => ({
+	min: Number(budget.min),
+	max: Number(budget.max),
+	type: budget.type === 'hourly' ? 'hourly' : 'fixed',
+	currency: 'INR',
+});
+
+const mapProjectForResponse = (projectDoc) => {
+	const project = projectDoc && typeof projectDoc.toObject === 'function' ? projectDoc.toObject() : projectDoc;
+
+	if (!project) {
+		return project;
+	}
+
+	const skillsRequired = Array.isArray(project.skillsRequired)
+		? project.skillsRequired
+		: Array.isArray(project.tags)
+			? project.tags
+			: [];
+
+	return {
+		...project,
+		skillsRequired,
+	};
+};
+
+const createProject = asyncHandler(async (req, res) => {
+	const { title, description, category, skillsRequired, budget, deadline, attachments } = req.body;
+
+	const project = await Project.create({
+		client: req.user._id,
+		title,
+		description,
+		category,
+		skillsRequired: Array.isArray(skillsRequired) ? skillsRequired : [],
+		tags: Array.isArray(skillsRequired) ? skillsRequired : [],
+		budget: normalizeBudget(budget),
+		deadline,
+		attachments: Array.isArray(attachments) ? attachments : [],
+		status: 'open',
+	});
+
+	const populated = await Project.findById(project._id).populate('client', 'fullName avatar').lean();
+
+	return res
+		.status(201)
+		.json(new ApiResponse(201, { project: mapProjectForResponse(populated) }, 'Project created successfully'));
+});
+
+const getAllProjects = asyncHandler(async (req, res) => {
+	const { page, limit, skip } = parsePagination(req.query);
+	const { category, budgetMin, budgetMax, skills, status, search, sort = 'newest' } = req.query;
+
+	const filters = {};
+
+	if (category) {
+		filters.category = String(category);
+	}
+
+	if (status) {
+		filters.status = String(status);
+	}
+
+	if (!status) {
+		filters.status = { $in: ['open', 'in-progress', 'in_progress', 'completed'] };
+	}
+
+	if (budgetMin !== undefined || budgetMax !== undefined) {
+		filters['budget.max'] = {};
+
+		if (budgetMin !== undefined) {
+			filters['budget.max'].$gte = Number(budgetMin);
+		}
+
+		if (budgetMax !== undefined) {
+			filters['budget.min'] = { $lte: Number(budgetMax) };
+		}
+	}
+
+	if (skills) {
+		const skillTokens = String(skills)
+			.split(',')
+			.map((value) => value.trim())
+			.filter(Boolean);
+
+		if (skillTokens.length > 0) {
+			filters.skillsRequired = { $in: skillTokens };
+		}
+	}
+
+	if (search) {
+		filters.$text = { $search: String(search).trim() };
+	}
+
+	const sortBy = buildProjectSort(String(sort || 'newest'));
+
+	const [items, total] = await Promise.all([
+		Project.find(filters)
+			.populate('client', 'fullName avatar')
+			.sort(sortBy)
+			.skip(skip)
+			.limit(limit)
+			.lean(),
+		Project.countDocuments(filters),
+	]);
+
+	const totalPages = Math.max(Math.ceil(total / limit), 1);
+
+	return res.status(200).json(
+		new ApiResponse(
+			200,
+			{ projects: items.map(mapProjectForResponse) },
+			'Projects fetched successfully',
+			{
+				page,
+				limit,
+				total,
+				totalPages,
+				hasNextPage: page < totalPages,
+				hasPrevPage: page > 1,
+			},
+		),
+	);
+});
+
+const getProjectById = asyncHandler(async (req, res) => {
+	const projectId = req.params.id;
+
+	if (!mongoose.Types.ObjectId.isValid(projectId)) {
+		throw new ApiError(400, 'Invalid project ID');
+	}
+
+	const project = await Project.findById(projectId).populate('client', 'fullName avatar').lean();
+
+	if (!project) {
+		throw new ApiError(404, 'Project not found');
+	}
+
+	const proposalsCount = await Proposal.countDocuments({ project: project._id });
+	project.proposalCount = proposalsCount;
+
+	return res
+		.status(200)
+		.json(new ApiResponse(200, { project: mapProjectForResponse(project) }, 'Project fetched successfully'));
+});
+
+const updateProject = asyncHandler(async (req, res) => {
+	const projectId = req.params.id;
+
+	if (!mongoose.Types.ObjectId.isValid(projectId)) {
+		throw new ApiError(400, 'Invalid project ID');
+	}
+
+	const project = await Project.findById(projectId);
+
+	if (!project) {
+		throw new ApiError(404, 'Project not found');
+	}
+
+	if (String(project.client) !== String(req.user._id)) {
+		throw new ApiError(403, 'Only project owner can update this project');
+	}
+
+	if (project.status !== 'open') {
+		throw new ApiError(400, 'Only open projects can be updated');
+	}
+
+	const allowedUpdates = ['title', 'description', 'category', 'skillsRequired', 'budget', 'deadline', 'attachments'];
+
+	for (const field of allowedUpdates) {
+		if (!Object.prototype.hasOwnProperty.call(req.body, field)) {
+			continue;
+		}
+
+		if (field === 'budget') {
+			project.budget = normalizeBudget(req.body.budget);
+			continue;
+		}
+
+		if (field === 'skillsRequired') {
+			project.skillsRequired = Array.isArray(req.body.skillsRequired) ? req.body.skillsRequired : [];
+			project.tags = project.skillsRequired;
+			continue;
+		}
+
+		project[field] = req.body[field];
+	}
+
+	await project.save();
+
+	const updated = await Project.findById(project._id).populate('client', 'fullName avatar').lean();
+
+	return res
+		.status(200)
+		.json(new ApiResponse(200, { project: mapProjectForResponse(updated) }, 'Project updated successfully'));
+});
+
+const deleteProject = asyncHandler(async (req, res) => {
+	const projectId = req.params.id;
+
+	if (!mongoose.Types.ObjectId.isValid(projectId)) {
+		throw new ApiError(400, 'Invalid project ID');
+	}
+
+	const project = await Project.findById(projectId);
+
+	if (!project) {
+		throw new ApiError(404, 'Project not found');
+	}
+
+	if (String(project.client) !== String(req.user._id)) {
+		throw new ApiError(403, 'Only project owner can delete this project');
+	}
+
+	const proposalsCount = await Proposal.countDocuments({ project: project._id });
+
+	if (proposalsCount > 0) {
+		throw new ApiError(400, 'Cannot delete project with submitted proposals');
+	}
+
+	await Project.deleteOne({ _id: project._id });
+
+	return res.status(200).json(new ApiResponse(200, null, 'Project deleted successfully'));
+});
+
+const getClientProjects = asyncHandler(async (req, res) => {
+	const projects = await Project.find({ client: req.user._id })
+		.populate('client', 'fullName avatar')
+		.sort({ createdAt: -1 })
+		.lean();
+
+	return res
+		.status(200)
+		.json(new ApiResponse(200, { projects: projects.map(mapProjectForResponse) }, 'Client projects fetched successfully'));
+});
+
+const submitProposal = asyncHandler(async (req, res) => {
+	const projectId = req.params.id;
+
+	if (!mongoose.Types.ObjectId.isValid(projectId)) {
+		throw new ApiError(400, 'Invalid project ID');
+	}
+
+	const { coverLetter, bidAmount, deliveryDays } = req.body;
+	const project = await Project.findById(projectId);
+
+	if (!project) {
+		throw new ApiError(404, 'Project not found');
+	}
+
+	if (String(project.client) === String(req.user._id)) {
+		throw new ApiError(400, 'You cannot submit proposal on your own project');
+	}
+
+	if (project.status !== 'open') {
+		throw new ApiError(400, 'Proposals are only allowed on open projects');
+	}
+
+	const existing = await Proposal.findOne({ project: project._id, freelancer: req.user._id }).lean();
+
+	if (existing) {
+		throw new ApiError(409, 'You have already submitted a proposal for this project');
+	}
+
+	const proposal = await Proposal.create({
+		project: project._id,
+		client: project.client,
+		freelancer: req.user._id,
+		coverLetter,
+		bidAmount: Number(bidAmount),
+		deliveryDays: Number(deliveryDays),
+	});
+
+	project.proposalCount = (project.proposalCount || 0) + 1;
+	await project.save();
+
+	const populated = await Proposal.findById(proposal._id).populate('freelancer', 'fullName avatar').lean();
+
+	return res
+		.status(201)
+		.json(new ApiResponse(201, { proposal: populated }, 'Proposal submitted successfully'));
+});
+
+const getProjectProposals = asyncHandler(async (req, res) => {
+	const projectId = req.params.id;
+
+	if (!mongoose.Types.ObjectId.isValid(projectId)) {
+		throw new ApiError(400, 'Invalid project ID');
+	}
+
+	const project = await Project.findById(projectId).lean();
+
+	if (!project) {
+		throw new ApiError(404, 'Project not found');
+	}
+
+	if (String(project.client) !== String(req.user._id)) {
+		throw new ApiError(403, 'Only project owner can view proposals');
+	}
+
+	const proposals = await Proposal.find({ project: project._id })
+		.populate('freelancer', 'fullName avatar')
+		.sort({ createdAt: -1 })
+		.lean();
+
+	return res
+		.status(200)
+		.json(new ApiResponse(200, { proposals }, 'Project proposals fetched successfully'));
+});
+
+const acceptProposal = asyncHandler(async (req, res) => {
+	const { id: projectId, proposalId } = req.params;
+
+	if (!mongoose.Types.ObjectId.isValid(projectId) || !mongoose.Types.ObjectId.isValid(proposalId)) {
+		throw new ApiError(400, 'Invalid project/proposal ID');
+	}
+
+	const project = await Project.findById(projectId);
+
+	if (!project) {
+		throw new ApiError(404, 'Project not found');
+	}
+
+	if (String(project.client) !== String(req.user._id)) {
+		throw new ApiError(403, 'Only project owner can accept proposal');
+	}
+
+	const proposal = await Proposal.findOne({ _id: proposalId, project: project._id });
+
+	if (!proposal) {
+		throw new ApiError(404, 'Proposal not found for this project');
+	}
+
+	proposal.status = 'accepted';
+	await proposal.save();
+
+	await Proposal.updateMany(
+		{ project: project._id, _id: { $ne: proposal._id }, status: 'pending' },
+		{ $set: { status: 'rejected' } },
+	);
+
+	project.status = 'in-progress';
+	project.assignedFreelancer = proposal.freelancer;
+	project.selectedFreelancer = proposal.freelancer;
+	await project.save();
+
+	const updatedProject = await Project.findById(project._id)
+		.populate('client', 'fullName avatar')
+		.populate('assignedFreelancer', 'fullName avatar')
+		.lean();
+
+	return res.status(200).json(
+		new ApiResponse(
+			200,
+			{ project: mapProjectForResponse(updatedProject), proposal },
+			'Proposal accepted successfully',
+		),
+	);
+});
+
+const closeProject = asyncHandler(async (req, res) => {
+	const projectId = req.params.id;
+
+	if (!mongoose.Types.ObjectId.isValid(projectId)) {
+		throw new ApiError(400, 'Invalid project ID');
+	}
+
+	const project = await Project.findById(projectId);
+
+	if (!project) {
+		throw new ApiError(404, 'Project not found');
+	}
+
+	if (String(project.client) !== String(req.user._id)) {
+		throw new ApiError(403, 'Only project owner can close this project');
+	}
+
+	project.status = 'cancelled';
+	await project.save();
+
+	return res
+		.status(200)
+		.json(new ApiResponse(200, { project: mapProjectForResponse(project) }, 'Project closed successfully'));
+});
+
+const getFreelancerProposals = asyncHandler(async (req, res) => {
+	const proposals = await Proposal.find({ freelancer: req.user._id })
+		.populate('project', 'title status budget deadline')
+		.sort({ createdAt: -1 })
+		.lean();
+
+	return res
+		.status(200)
+		.json(new ApiResponse(200, { proposals }, 'Freelancer proposals fetched successfully'));
+});
+
+export {
+	acceptProposal,
+	closeProject,
+	createProject,
+	deleteProject,
+	getAllProjects,
+	getClientProjects,
+	getFreelancerProposals,
+	getProjectById,
+	getProjectProposals,
+	submitProposal,
+	updateProject,
+};
+
+export default {
+	createProject,
+	getAllProjects,
+	getProjectById,
+	updateProject,
+	deleteProject,
+	getClientProjects,
+	submitProposal,
+	getProjectProposals,
+	acceptProposal,
+	closeProject,
+	getFreelancerProposals,
+};
+
