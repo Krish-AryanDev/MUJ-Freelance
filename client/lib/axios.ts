@@ -4,6 +4,7 @@ import axios, {
   InternalAxiosRequestConfig,
   type AxiosResponse,
 } from 'axios';
+import { authStore } from '@/store/authStore';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5000/api';
 const REQUEST_TIMEOUT_MS = 20_000;
@@ -62,8 +63,10 @@ apiClient.interceptors.response.use(
     const requestUrl = originalRequest.url ?? '';
     const isRefreshRequest = requestUrl.includes('/auth/refresh-token');
     const isSessionProbeRequest = requestUrl.includes('/auth/me');
+    const authState = authStore.getState();
+    const hasKnownSession = Boolean(authState.isAuthenticated && authState.user?.id);
 
-    if (isRefreshRequest || isSessionProbeRequest) {
+    if (isRefreshRequest || isSessionProbeRequest || !hasKnownSession) {
       return Promise.reject(error);
     }
 

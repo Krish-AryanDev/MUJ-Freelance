@@ -7,7 +7,7 @@ interface RatingBreakdownProps {
   averageRating: number;
 }
 
-const ratingLevels = [5, 4, 3, 2, 1];
+const ratingLevels = [5, 4, 3, 2, 1] as const;
 
 export default function RatingBreakdown({ breakdown, totalReviews, averageRating }: RatingBreakdownProps) {
   if (totalReviews === 0) {

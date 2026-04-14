@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Briefcase, CheckCircle, DollarSign, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
@@ -182,8 +183,8 @@ export default function FreelancerDashboardHomePage() {
     return orders.filter((order) => getOrderFreelancerId(order.freelancerId) === userId);
   }, [ordersQuery.data, user?.id]);
 
-  const gigs = gigsQuery.data?.gigs ?? [];
-  const proposals = proposalsQuery.data ?? [];
+  const gigs = useMemo(() => gigsQuery.data?.gigs ?? [], [gigsQuery.data]);
+  const proposals = useMemo(() => proposalsQuery.data ?? [], [proposalsQuery.data]);
 
   const stats = useMemo(() => {
     const activeOrders = freelancerOrders.filter((order) => order.status === 'active').length;
@@ -334,9 +335,12 @@ export default function FreelancerDashboardHomePage() {
                   <p className="text-sm font-medium text-zinc-900">{truncateText(getGigTitle(order.gigId), 55)}</p>
                   <div className="mt-1 flex items-center gap-2 text-xs text-zinc-600">
                     {getBuyerAvatar(order.clientId) ? (
-                      <img
+                      <Image
                         src={getBuyerAvatar(order.clientId)}
                         alt={getBuyerName(order.clientId)}
+                        width={20}
+                        height={20}
+                        unoptimized
                         className="h-5 w-5 rounded-full border border-zinc-200 object-cover"
                       />
                     ) : (
@@ -404,7 +408,14 @@ export default function FreelancerDashboardHomePage() {
               return (
                 <article key={gig.id} className="overflow-hidden rounded-xl border border-zinc-200">
                   {gig.images[0]?.url ? (
-                    <img src={gig.images[0].url} alt={gig.title} className="h-36 w-full object-cover" />
+                    <Image
+                      src={gig.images[0].url}
+                      alt={gig.title}
+                      width={640}
+                      height={288}
+                      unoptimized
+                      className="h-36 w-full object-cover"
+                    />
                   ) : (
                     <div className="flex h-36 w-full items-center justify-center bg-zinc-100 text-zinc-400">
                       <Briefcase className="h-8 w-8" />

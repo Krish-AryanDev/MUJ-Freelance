@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { CheckCircle, DollarSign, FileText, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useEffect, useMemo } from 'react';
 import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
@@ -132,7 +133,7 @@ export default function ClientDashboardHomePage() {
     return ordersQuery.data?.success ? ordersQuery.data.data.orders : [];
   }, [ordersQuery.data]);
 
-  const projects = projectsQuery.data ?? [];
+  const projects = useMemo(() => projectsQuery.data ?? [], [projectsQuery.data]);
 
   const stats = useMemo(() => {
     const activeOrders = orders.filter((order) => order.status === 'active').length;
@@ -270,9 +271,12 @@ export default function ClientDashboardHomePage() {
                   <p className="text-sm font-medium text-zinc-900">{truncateText(getGigTitle(order.gigId), 55)}</p>
                   <div className="mt-1 flex items-center gap-2 text-xs text-zinc-600">
                     {getSellerAvatar(order.freelancerId) ? (
-                      <img
+                      <Image
                         src={getSellerAvatar(order.freelancerId)}
                         alt={getSellerName(order.freelancerId)}
+                        width={20}
+                        height={20}
+                        unoptimized
                         className="h-5 w-5 rounded-full border border-zinc-200 object-cover"
                       />
                     ) : (

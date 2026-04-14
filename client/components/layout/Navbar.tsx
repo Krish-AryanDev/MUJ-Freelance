@@ -20,12 +20,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
 import { messageService } from '../../services/message.service';
+import { getProfileCompletionTips } from '../../services/profile.service';
 import Avatar from '../ui/Avatar';
 import NotificationBell from '../notifications/NotificationBell';
-import { classNames } from '../../utils/helpers';
+import { classNames, isServiceUnavailableError } from '../../utils/helpers';
 
 const discoverNavItems = [
   { label: 'Home', href: '/' },
+  { label: 'Freelancers', href: '/freelancers' },
   { label: 'Gigs', href: '/gigs' },
   { label: 'Projects', href: '/projects' },
 ] as const;
@@ -58,10 +60,40 @@ export default function Navbar() {
     queryKey: ['messages', 'unread-count', user?.id || ''],
     queryFn: messageService.getUnreadCount,
     enabled: isAuthenticated,
-    refetchInterval: 30000,
+    retry: (failureCount, error) => {
+      if (isServiceUnavailableError(error)) {
+        return false;
+      }
+
+      return failureCount < 2;
+    },
+    refetchInterval: (query) => {
+      if (isServiceUnavailableError(query.state.error)) {
+        return false;
+      }
+
+      return 30000;
+    },
+    refetchOnWindowFocus: false,
   });
 
   const unreadCount = unreadQuery.data?.success ? unreadQuery.data.data.count : 0;
+
+  const profileCompletionQuery = useQuery({
+    queryKey: ['profile', 'completion', user?.id || ''],
+    queryFn: getProfileCompletionTips,
+    enabled: isAuthenticated,
+    retry: (failureCount, error) => {
+      if (isServiceUnavailableError(error)) {
+        return false;
+      }
+
+      return failureCount < 2;
+    },
+    refetchOnWindowFocus: false,
+  });
+
+  const completionScore = profileCompletionQuery.data?.score || 0;
 
   useEffect(() => {
     const onScroll = () => {
@@ -173,6 +205,12 @@ export default function Navbar() {
       label: 'Dashboard',
       href: dashboardHref,
       icon: LayoutDashboard,
+      show: true,
+    },
+    {
+      label: completionScore < 100 ? `Setup Profile (${completionScore}%)` : 'Setup Profile',
+      href: '/profile/setup',
+      icon: User,
       show: true,
     },
     {

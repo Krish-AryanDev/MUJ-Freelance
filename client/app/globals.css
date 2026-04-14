@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 :root {
+  --font-inter: "Inter", sans-serif;
   --background: #0b0d12;
   --foreground: #f3f4f6;
   --surface: #11131a;
@@ -15,6 +16,7 @@
 
 * {
   box-sizing: border-box;
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
 }
 
 body {
@@ -23,9 +25,10 @@ body {
   background: radial-gradient(circle at 12% 16%, #1f2937 0%, #0b0d12 45%),
     radial-gradient(circle at 86% 2%, #3f2d0a 0%, rgba(11, 13, 18, 0) 28%), var(--background);
   color: var(--foreground);
-  font-family: var(--font-sans);
+  font-family: var(--font-inter), system-ui, -apple-system, sans-serif;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 a {
@@ -79,6 +82,23 @@ a {
 
 .animate-marquee {
   animation: marquee 20s linear infinite;
+}
+
+@keyframes card-body-gradient-shift {
+  0% {
+    background-position: 50% 0%;
+  }
+  50% {
+    background-position: 50% 100%;
+  }
+  100% {
+    background-position: 50% 0%;
+  }
+}
+
+.animate-card-body-gradient {
+  background-size: 200% 200%;
+  animation: card-body-gradient-shift 16s ease-in-out infinite;
 }
 
 

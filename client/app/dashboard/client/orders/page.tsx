@@ -35,7 +35,7 @@ export default function ClientOrdersDashboardPage() {
     enabled: isAuthenticated,
   });
 
-  const orders = data?.success ? data.data.orders : [];
+  const orders = useMemo(() => (data?.success ? data.data.orders : []), [data]);
 
   const getUserId = (value: Order['clientId'] | Order['freelancerId']): string => {
     if (typeof value === 'string') {

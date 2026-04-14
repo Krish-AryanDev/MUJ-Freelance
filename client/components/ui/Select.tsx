@@ -1,3 +1,4 @@
+import { forwardRef } from 'react';
 import type { SelectHTMLAttributes } from 'react';
 
 import { classNames } from '../../utils/helpers';
@@ -15,16 +16,19 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
   options?: SelectOption[];
 }
 
-export default function Select({
-  label,
-  error,
-  hint,
-  id,
-  className,
-  options,
-  children,
-  ...props
-}: SelectProps) {
+const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
+  {
+    label,
+    error,
+    hint,
+    id,
+    className,
+    options,
+    children,
+    ...props
+  },
+  ref,
+) {
   return (
     <div className="space-y-1">
       {label ? (
@@ -35,6 +39,7 @@ export default function Select({
 
       <select
         id={id}
+        ref={ref}
         className={classNames(
           'w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none ring-black/20 transition focus:ring-2',
           error ? 'border-red-500 focus:ring-red-300' : '',
@@ -54,4 +59,6 @@ export default function Select({
       {!error && hint ? <p className="text-xs text-zinc-500">{hint}</p> : null}
     </div>
   );
-}
+});
+
+export default Select;

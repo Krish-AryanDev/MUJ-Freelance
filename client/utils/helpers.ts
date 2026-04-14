@@ -55,3 +55,20 @@ export const getErrorMessage = (error: unknown, fallback = 'Something went wrong
 
   return fallback;
 };
+
+export const getHttpStatusCode = (error: unknown): number | null => {
+  if (error instanceof AxiosError) {
+    return error.response?.status ?? null;
+  }
+
+  if (error instanceof Error) {
+    const match = error.message.match(/\b([45]\d{2})\b/);
+    return match ? Number(match[1]) : null;
+  }
+
+  return null;
+};
+
+export const isServiceUnavailableError = (error: unknown): boolean => {
+  return getHttpStatusCode(error) === 503;
+};

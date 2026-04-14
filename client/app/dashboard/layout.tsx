@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import type { ReactNode } from 'react';
 
@@ -16,7 +16,7 @@ export default function DashboardRouteLayout({ children }: DashboardRouteLayoutP
   const router = useRouter();
   const pathname = usePathname();
   const { initialized, isLoading, isAuthenticated, user } = useAuth();
-  const roles = user?.roles ?? [];
+  const roles = useMemo(() => user?.roles ?? [], [user?.roles]);
 
   useEffect(() => {
     if (!initialized || isLoading) {

@@ -1,11 +1,10 @@
 import { classNames } from '../../utils/helpers';
 
 interface ProfileStatsProps {
-  completedOrders?: number;
-  totalEarnings?: number;
-  averageRating?: number;
+  completedProjects?: number;
   totalReviews?: number;
-  responseTime?: string;
+  averageRating?: number;
+  profileViews?: number;
   className?: string;
 }
 
@@ -15,50 +14,37 @@ interface StatItem {
   hint?: string;
 }
 
-const formatCurrency = (amount: number): string => {
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
-
 export default function ProfileStats({
-  completedOrders = 0,
-  totalEarnings = 0,
-  averageRating = 0,
+  completedProjects = 0,
   totalReviews = 0,
-  responseTime,
+  averageRating = 0,
+  profileViews = 0,
   className,
 }: ProfileStatsProps) {
   const stats: StatItem[] = [
     {
-      label: 'Completed Orders',
-      value: String(completedOrders),
+      label: 'Completed Projects',
+      value: String(completedProjects),
     },
     {
-      label: 'Total Earnings',
-      value: formatCurrency(totalEarnings),
+      label: 'Total Reviews',
+      value: String(totalReviews),
     },
     {
       label: 'Average Rating',
       value: averageRating.toFixed(1),
-      hint: `${totalReviews} reviews`,
+      hint: 'Out of 5.0',
     },
     {
-      label: 'Public Reviews',
-      value: String(totalReviews),
-    },
-    {
-      label: 'Response Time',
-      value: responseTime ?? 'Not available',
+      label: 'Profile Views',
+      value: String(profileViews),
     },
   ];
 
   return (
-    <section className={classNames('grid gap-3 sm:grid-cols-2 lg:grid-cols-5', className)}>
+    <section className={classNames('grid gap-3 sm:grid-cols-2 lg:grid-cols-4', className)}>
       {stats.map((stat) => (
-        <article key={stat.label} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+        <article key={stat.label} className="rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:-translate-y-0.5">
           <p className="text-xs uppercase tracking-wide text-zinc-500">{stat.label}</p>
           <p className="mt-2 text-xl font-semibold text-zinc-900">{stat.value}</p>
           {stat.hint ? <p className="mt-1 text-xs text-zinc-500">{stat.hint}</p> : null}

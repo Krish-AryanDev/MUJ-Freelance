@@ -7,13 +7,12 @@ import {
   Filter,
   LayoutGrid,
   List,
-  Search,
-  ShoppingCart,
-  Star,
+  SlidersHorizontal,
   X,
 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
+import GigCard from '@/components/gigs/GigCard';
 import { GIG_CATEGORIES as CATEGORIES } from '@/constants/categories';
 import { gigService } from '@/services/gig.service';
 import type { GigCategory, GigFilters as GigFiltersType } from '@/types/gig.types';
@@ -114,24 +113,6 @@ const getPageNumbers = (currentPage: number, totalPages: number): number[] => {
   return Array.from(pages)
     .filter((value) => value >= 1 && value <= totalPages)
     .sort((first, second) => first - second);
-};
-
-const getStartingPrice = (gig: {
-  packages?: Array<{ price?: number }>;
-}): number => {
-  const prices = (gig.packages || [])
-    .map((pkg) => pkg.price)
-    .filter((value): value is number => typeof value === 'number' && Number.isFinite(value));
-
-  if (prices.length === 0) {
-    return 0;
-  }
-
-  return Math.min(...prices);
-};
-
-const getGigId = (gig: { id?: string; _id?: string; slug?: string }): string => {
-  return gig.slug || gig.id || gig._id || '';
 };
 
 export default function Page() {
@@ -243,17 +224,20 @@ export default function Page() {
 
   const renderFilterSidebar = () => (
     <div className="rounded-xl border border-gray-200 bg-white p-4">
-      <h3 className="mb-4 border-b border-gray-100 pb-3 text-lg font-black text-gray-900">Filter</h3>
+      <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900">
+        <SlidersHorizontal className="h-4 w-4 text-orange-500" />
+        Filter
+      </h3>
 
-      <div className="mb-5 border-b border-gray-100 pb-5">
-        <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-800">Category</h4>
+      <div className="mb-4 border-b border-gray-100 pb-4 last:border-0">
+        <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-700">Category</h4>
         {CATEGORIES.map((item) => {
           const checked = category === item.value;
           return (
             <label key={item.value} className="group mb-2 flex cursor-pointer items-center gap-2.5">
               <input
                 type="checkbox"
-                className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-orange-500"
+                className="w-4 h-4 rounded accent-orange-500 cursor-pointer border-gray-300"
                 checked={checked}
                 onChange={() => {
                   setCategory(checked ? undefined : item.value);
@@ -268,8 +252,8 @@ export default function Page() {
         })}
       </div>
 
-      <div className="mb-5 border-b border-gray-100 pb-5">
-        <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-800">Price Range</h4>
+      <div className="mb-4 border-b border-gray-100 pb-4 last:border-0">
+        <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-700">Price Range</h4>
         <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">Min Price (₹)</label>
         <input
           type="number"
@@ -301,15 +285,15 @@ export default function Page() {
         />
       </div>
 
-      <div className="mb-5 border-b border-gray-100 pb-5">
-        <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-800">Delivery Days</h4>
+      <div className="mb-4 border-b border-gray-100 pb-4 last:border-0">
+        <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-700">Delivery Days</h4>
         {deliveryDayOptions.map((days) => {
           const checked = draftFilters.deliveryDaysMax === days;
           return (
             <label key={days} className="group mb-2 flex cursor-pointer items-center gap-2.5">
               <input
                 type="checkbox"
-                className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-orange-500"
+                className="w-4 h-4 rounded accent-orange-500 cursor-pointer border-gray-300"
                 checked={checked}
                 onChange={() => {
                   setDraftFilters((previous) => ({
@@ -326,15 +310,15 @@ export default function Page() {
         })}
       </div>
 
-      <div className="mb-5 border-b border-gray-100 pb-5">
-        <h4 className="mb-3 text-sm font-bold uppercase tracking-wide text-gray-800">Rating</h4>
+      <div className="mb-4 border-b border-gray-100 pb-4 last:border-0">
+        <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-700">Rating</h4>
         {ratingOptions.map((rating) => {
           const checked = draftFilters.minRating === rating;
           return (
             <label key={rating} className="group mb-2 flex cursor-pointer items-center gap-2.5">
               <input
                 type="checkbox"
-                className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-orange-500"
+                className="w-4 h-4 rounded accent-orange-500 cursor-pointer border-gray-300"
                 checked={checked}
                 onChange={() => {
                   setDraftFilters((previous) => ({
@@ -401,7 +385,7 @@ export default function Page() {
                 {filters.search ? (
                   <>
                     {' '}
-                    for <span className="font-semibold text-orange-500">"{filters.search}"</span>
+                    for <span className="font-semibold text-orange-500">&quot;{filters.search}&quot;</span>
                   </>
                 ) : null}
               </p>
@@ -532,88 +516,10 @@ export default function Page() {
             ) : null}
 
             {!isLoading && !isError && gigs.length > 0 ? (
-              <div
-                className={
-                  viewMode === 'grid'
-                    ? 'grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                    : 'grid grid-cols-1 gap-4'
-                }
-              >
-                {gigs.map((gig) => {
-                  const categoryLabel = getCategoryLabel(gig.category as GigCategory | undefined);
-                  const startingPrice = getStartingPrice(gig);
-                  const freelancerName =
-                    gig.freelancer?.fullName ||
-                    gig.freelancer?.name ||
-                    gig.createdBy?.fullName ||
-                    gig.createdBy?.name ||
-                    'Freelancer';
-                  const avatarUrl = gig.freelancer?.avatar?.url || gig.createdBy?.avatar?.url || '';
-                  const rating = typeof gig.averageRating === 'number' ? gig.averageRating : 0;
-                  const reviews = typeof gig.totalReviews === 'number' ? gig.totalReviews : 0;
-                  const imageUrl = gig.images?.[0]?.url || '';
-                  const gigLink = `/gigs/${getGigId(gig)}`;
-
-                  return (
-                    <a
-                      href={gigLink}
-                      key={gig._id || gig.id || gig.slug}
-                      className="group cursor-pointer overflow-hidden rounded-xl border border-gray-200 bg-white transition-all duration-200 hover:border-orange-200 hover:shadow-md"
-                    >
-                      <div className="relative h-44 overflow-hidden bg-gray-100">
-                        {imageUrl ? (
-                          // eslint-disable-next-line @next/next/no-img-element
-                          <img
-                            src={imageUrl}
-                            alt={gig.title || 'Gig image'}
-                            className="h-full w-full object-cover"
-                          />
-                        ) : (
-                          <div className="h-full w-full bg-gradient-to-br from-gray-100 via-gray-200 to-gray-100" />
-                        )}
-                      </div>
-
-                      <div className="p-3">
-                        <span className="mb-1.5 inline-block rounded-full bg-orange-50 px-2 py-0.5 text-xs font-medium text-orange-600">
-                          {categoryEmoji[gig.category || 'OTHER'] || '💼'} {categoryLabel}
-                        </span>
-
-                        <h3 className="mb-2 line-clamp-2 text-sm font-semibold leading-snug text-gray-900">
-                          {gig.title || 'Untitled gig'}
-                        </h3>
-
-                        <div className="mb-3 flex items-center gap-1.5">
-                          <div className="h-5 w-5 overflow-hidden rounded-full bg-gray-200">
-                            {avatarUrl ? (
-                              // eslint-disable-next-line @next/next/no-img-element
-                              <img
-                                src={avatarUrl}
-                                alt={freelancerName}
-                                className="h-full w-full object-cover"
-                              />
-                            ) : null}
-                          </div>
-                          <span className="text-xs text-gray-500">{freelancerName}</span>
-                        </div>
-
-                        <div className="flex items-center justify-between border-t border-gray-100 pt-2">
-                          <div className="flex items-center gap-1">
-                            <Star className="h-3.5 w-3.5 fill-orange-400 text-orange-400" />
-                            <span className="text-xs font-semibold text-gray-700">{rating.toFixed(1)}</span>
-                            <span className="text-xs text-gray-400">({reviews})</span>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-black text-gray-900">From ₹{startingPrice}</span>
-                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500 text-white transition-colors hover:bg-orange-600">
-                              <ShoppingCart className="h-3.5 w-3.5" />
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </a>
-                  );
-                })}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {gigs.map((gig) => (
+                  <GigCard key={gig._id || gig.id || gig.slug} gig={gig} />
+                ))}
               </div>
             ) : null}
 

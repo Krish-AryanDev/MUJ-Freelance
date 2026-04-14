@@ -8,6 +8,7 @@ import { useAuth } from './useAuth';
 import { useSocket } from './useSocket';
 import { notificationService } from '../services/notification.service';
 import { useNotificationStore } from '../store/notificationStore';
+import { isServiceUnavailableError } from '../utils/helpers';
 
 const NOTIFICATION_QUERY_LIMIT = 20;
 
@@ -36,14 +37,42 @@ export const useNotifications = () => {
     queryKey: ['notifications'],
     queryFn: () => notificationService.getNotifications({ page: 1, limit: NOTIFICATION_QUERY_LIMIT }),
     enabled: isAuthenticated,
-    refetchInterval: 60000,
+    retry: (failureCount, error) => {
+      if (isServiceUnavailableError(error)) {
+        return false;
+      }
+
+      return failureCount < 2;
+    },
+    refetchInterval: (query) => {
+      if (isServiceUnavailableError(query.state.error)) {
+        return false;
+      }
+
+      return 60000;
+    },
+    refetchOnWindowFocus: false,
   });
 
   const unreadCountQuery = useQuery({
     queryKey: ['notificationUnreadCount'],
     queryFn: notificationService.getUnreadCount,
     enabled: isAuthenticated,
-    refetchInterval: 30000,
+    retry: (failureCount, error) => {
+      if (isServiceUnavailableError(error)) {
+        return false;
+      }
+
+      return failureCount < 2;
+    },
+    refetchInterval: (query) => {
+      if (isServiceUnavailableError(query.state.error)) {
+        return false;
+      }
+
+      return 30000;
+    },
+    refetchOnWindowFocus: false,
   });
 
   useEffect(() => {

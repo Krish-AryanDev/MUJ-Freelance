@@ -44,9 +44,10 @@ export const useSocket = () => {
     subscribers += 1;
 
     const auth = authStore.getState();
+    const isInitialized = Boolean(auth.initialized);
     const token = auth.accessToken || '';
     const userId = auth.user?.id || '';
-    const isAuthenticated = Boolean(auth.isAuthenticated && token && userId);
+    const isAuthenticated = Boolean(isInitialized && auth.isAuthenticated && token && userId);
 
     if (!isAuthenticated) {
       if (socketInstance) {

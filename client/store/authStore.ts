@@ -29,6 +29,8 @@ let authState: AuthState = {
   error: null,
 };
 
+let authInitializationPromise: Promise<void> | null = null;
+
 const emitChange = (): void => {
   listeners.forEach((listener) => listener());
 };
@@ -97,23 +99,33 @@ const initializeAuth = async (): Promise<void> => {
     return;
   }
 
-  setLoading(true);
-  setError(null);
-
-  try {
-    const user = await authService.getCurrentUser();
-    setUser(user, null);
-  } catch (error) {
-    const authError = error as AuthServiceError;
-
-    if (isTransientAuthFailure(authError)) {
-      setError(authError.message || 'Server unavailable. Retrying when connection is restored.');
-    } else {
-      clearAuth();
-    }
-  } finally {
-    setState({ isLoading: false, initialized: true });
+  if (authInitializationPromise) {
+    await authInitializationPromise;
+    return;
   }
+
+  authInitializationPromise = (async () => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const user = await authService.getCurrentUser();
+      setUser(user, null);
+    } catch (error) {
+      const authError = error as AuthServiceError;
+
+      if (isTransientAuthFailure(authError)) {
+        setError(authError.message || 'Server unavailable. Retrying when connection is restored.');
+      } else {
+        clearAuth();
+      }
+    } finally {
+      setState({ isLoading: false, initialized: true });
+      authInitializationPromise = null;
+    }
+  })();
+
+  await authInitializationPromise;
 };
 
 const login = async (payload: LoginRequest): Promise<User> => {
