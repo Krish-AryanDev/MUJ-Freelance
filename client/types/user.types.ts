@@ -81,6 +81,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   user: User;
   accessTokenIssued: boolean;
+  accessToken?: string;
 }
 
 export interface VerifyEmailOtpRequest {

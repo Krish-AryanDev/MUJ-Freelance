@@ -67,6 +67,16 @@ const userSchema = new Schema(
 		lastLoginAt: {
 			type: Date,
 		},
+		totalEarnings: {
+			type: Number,
+			default: 0,
+			min: 0,
+		},
+		completedOrders: {
+			type: Number,
+			default: 0,
+			min: 0,
+		},
 	},
 	{
 		timestamps: true,

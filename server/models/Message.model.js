@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
-const MESSAGE_TYPES = ['text', 'file', 'system'];
+const MESSAGE_TYPES = ['text', 'image', 'file', 'order_update', 'system'];
 
 const attachmentSchema = new Schema(
 	{
@@ -14,6 +14,7 @@ const attachmentSchema = new Schema(
 			type: String,
 			required: true,
 			trim: true,
+			alias: 'filename',
 		},
 		size: {
 			type: Number,
@@ -24,6 +25,7 @@ const attachmentSchema = new Schema(
 			type: String,
 			trim: true,
 			default: '',
+			alias: 'fileType',
 		},
 	},
 	{ _id: false },
@@ -62,6 +64,7 @@ const messageSchema = new Schema(
 			type: String,
 			enum: MESSAGE_TYPES,
 			default: 'text',
+			alias: 'messageType',
 		},
 		content: {
 			type: String,
@@ -73,6 +76,14 @@ const messageSchema = new Schema(
 			type: [attachmentSchema],
 			default: [],
 		},
+		isRead: {
+			type: Boolean,
+			default: false,
+		},
+		readAt: {
+			type: Date,
+			default: null,
+		},
 		readBy: {
 			type: [readReceiptSchema],
 			default: [],
@@ -82,6 +93,10 @@ const messageSchema = new Schema(
 			default: false,
 		},
 		editedAt: {
+			type: Date,
+			default: null,
+		},
+		deletedAt: {
 			type: Date,
 			default: null,
 		},

@@ -17,7 +17,7 @@ export default function GigImageSlider({ images, title, className }: GigImageSli
   const [activeIndex, setActiveIndex] = useState(0);
 
   const safeImages = useMemo(() => {
-    return images.filter((image) => Boolean(image.url));
+    return images.filter((image) => Boolean(image.url) && !image.url.includes('example.com'));
   }, [images]);
 
   if (safeImages.length === 0) {

@@ -1,4 +1,6 @@
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
 :root {
   --background: #0b0d12;
@@ -7,17 +9,8 @@
   --surface-soft: #171923;
   --muted: #a1a1aa;
   --accent: #f59e0b;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-surface: var(--surface);
-  --color-surface-soft: var(--surface-soft);
-  --color-muted: var(--muted);
-  --color-accent: var(--accent);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --app-font-sans: "Inter", "Segoe UI", sans-serif;
+  --app-font-mono: "Consolas", "SFMono-Regular", "Liberation Mono", monospace;
 }
 
 * {
@@ -30,7 +23,7 @@ body {
   background: radial-gradient(circle at 12% 16%, #1f2937 0%, #0b0d12 45%),
     radial-gradient(circle at 86% 2%, #3f2d0a 0%, rgba(11, 13, 18, 0) 28%), var(--background);
   color: var(--foreground);
-  font-family: var(--font-geist-sans), "Segoe UI", sans-serif;
+  font-family: var(--font-sans);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
 }
@@ -74,4 +67,18 @@ a {
 ::-webkit-scrollbar-thumb:hover {
   background: #434a5e;
 }
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee 20s linear infinite;
+}
+
 

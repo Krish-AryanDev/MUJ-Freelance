@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import { useMemo, useState } from 'react';
 
 import { GIG_CATEGORIES } from '../../constants/categories';
@@ -214,7 +215,16 @@ export default function GigCreateForm({
           {selectedCoverImageName ? <p className="text-xs text-zinc-500">Selected: {selectedCoverImageName}</p> : null}
           {formState.coverImagePreview ? (
             <div className="overflow-hidden rounded-lg border border-zinc-200 bg-zinc-50 p-2">
-              <img src={formState.coverImagePreview} alt="Cover preview" className="h-44 w-full rounded-md object-cover" />
+              <div className="relative h-44 w-full">
+                <Image
+                  src={formState.coverImagePreview}
+                  alt="Cover preview"
+                  fill
+                  unoptimized
+                  sizes="(max-width: 768px) 100vw, 640px"
+                  className="rounded-md object-cover"
+                />
+              </div>
             </div>
           ) : null}
         </div>

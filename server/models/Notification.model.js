@@ -3,19 +3,24 @@ import mongoose from 'mongoose';
 const { Schema } = mongoose;
 
 const NOTIFICATION_TYPES = [
-	'order_created',
-	'order_paid',
+	'order_placed',
+	'order_accepted',
 	'order_delivered',
-	'revision_requested',
 	'order_completed',
-	'proposal_received',
+	'order_cancelled',
+	'order_revision',
+	'new_message',
+	'new_review',
+	'new_proposal',
 	'proposal_accepted',
-	'message_received',
-	'review_received',
+	'proposal_rejected',
+	'payment_received',
+	'payment_released',
+	'account_verified',
+	'gig_approved',
+	'gig_rejected',
 	'system',
 ];
-
-const NOTIFICATION_CHANNELS = ['in_app', 'email'];
 
 const notificationSchema = new Schema(
 	{
@@ -25,7 +30,7 @@ const notificationSchema = new Schema(
 			required: true,
 			index: true,
 		},
-		actor: {
+		sender: {
 			type: Schema.Types.ObjectId,
 			ref: 'User',
 			default: null,
@@ -48,10 +53,10 @@ const notificationSchema = new Schema(
 			trim: true,
 			maxlength: 1200,
 		},
-		channel: {
+		link: {
 			type: String,
-			enum: NOTIFICATION_CHANNELS,
-			default: 'in_app',
+			trim: true,
+			default: '',
 		},
 		metadata: {
 			type: Schema.Types.Mixed,
@@ -74,6 +79,7 @@ const notificationSchema = new Schema(
 );
 
 notificationSchema.index({ recipient: 1, createdAt: -1 });
+notificationSchema.index({ recipient: 1, isRead: 1, createdAt: -1 });
 
 notificationSchema.pre('save', function syncReadAt(next) {
 	if (this.isRead && !this.readAt) {
@@ -90,6 +96,6 @@ notificationSchema.pre('save', function syncReadAt(next) {
 const Notification =
 	mongoose.models.Notification || mongoose.model('Notification', notificationSchema);
 
-export { NOTIFICATION_TYPES, NOTIFICATION_CHANNELS, Notification };
+export { NOTIFICATION_TYPES, Notification };
 export default Notification;
 

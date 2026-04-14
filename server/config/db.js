@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import ApiError from '../utils/ApiError.js';
 
 mongoose.set('strictQuery', true);
+mongoose.set('bufferCommands', false);
 
 const wait = async (ms) =>
 	new Promise((resolve) => {

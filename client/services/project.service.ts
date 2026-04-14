@@ -89,7 +89,7 @@ interface ProjectsFilters {
 }
 
 const normalizeUserSummary = (user?: BackendUserSummary | null): Pick<Project['client'], 'id' | 'fullName' | 'avatar'> => ({
-  id: user?.id ?? user?._id ?? '',
+  id: String(user?.id ?? user?._id ?? ''),
   fullName: user?.fullName ?? 'Unknown User',
   avatar: {
     url: user?.avatar?.url ?? '',
@@ -112,7 +112,7 @@ const normalizeProject = (project: BackendProject): Project => {
     : [];
 
   return {
-    id: normalizedId,
+    id: String(normalizedId),
     title: project.title,
     description: project.description,
     category: project.category,
@@ -143,11 +143,13 @@ const normalizeProposal = (proposal: BackendProposal): Proposal => {
 
   const projectField = proposal.project;
   const projectId =
-    typeof projectField === 'string' ? projectField : projectField?.id ?? projectField?._id ?? '';
+    typeof projectField === 'string'
+      ? projectField
+      : String(projectField?.id ?? projectField?._id ?? '');
   const projectTitle = typeof projectField === 'string' ? undefined : projectField?.title;
 
   return {
-    id: normalizedId,
+    id: String(normalizedId),
     project: projectId,
     projectTitle,
     freelancer: normalizeUserSummary(proposal.freelancer),
@@ -261,8 +263,15 @@ const getProjectProposals = async (projectId: string): Promise<Proposal[]> => {
 
 const acceptProposal = async (projectId: string, proposalId: string): Promise<Project> => {
   try {
+    const normalizedProjectId = String(projectId || '');
+    const normalizedProposalId = String(proposalId || '');
+
+    if (!/^[a-fA-F0-9]{24}$/.test(normalizedProjectId) || !/^[a-fA-F0-9]{24}$/.test(normalizedProposalId)) {
+      throw new Error('Invalid project/proposal identifier');
+    }
+
     const response = await apiClient.put<ApiResponse<ProjectPayload>>(
-      `/projects/${projectId}/proposals/${proposalId}/accept`,
+      `/projects/${normalizedProjectId}/proposals/${normalizedProposalId}/accept`,
     );
     const data = unwrapResponse(response);
     return normalizeProject(data.project);

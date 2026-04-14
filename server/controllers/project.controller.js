@@ -1,8 +1,10 @@
 import mongoose from 'mongoose';
 
+import { getIO } from '../config/socket.js';
 import Project from '../models/Project.model.js';
 import Proposal from '../models/Proposal.model.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
+import { createNotification } from './notification.controller.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 
@@ -51,6 +53,8 @@ const mapProjectForResponse = (projectDoc) => {
 		skillsRequired,
 	};
 };
+
+const getUserDisplayName = (user) => user?.fullName || user?.name || 'A freelancer';
 
 const createProject = asyncHandler(async (req, res) => {
 	const { title, description, category, skillsRequired, budget, deadline, attachments } = req.body;
@@ -304,6 +308,17 @@ const submitProposal = asyncHandler(async (req, res) => {
 
 	const populated = await Proposal.findById(proposal._id).populate('freelancer', 'fullName avatar').lean();
 
+	void createNotification({
+		recipient: project.client,
+		sender: req.user._id,
+		type: 'new_proposal',
+		title: 'New Proposal Received!',
+		message: `${getUserDisplayName(req.user)} submitted a proposal for "${project.title}"`,
+		link: `/projects/${project._id}`,
+		metadata: { projectId: project._id, proposalId: proposal._id },
+		io: getIO(),
+	});
+
 	return res
 		.status(201)
 		.json(new ApiResponse(201, { proposal: populated }, 'Proposal submitted successfully'));
@@ -362,6 +377,14 @@ const acceptProposal = asyncHandler(async (req, res) => {
 	proposal.status = 'accepted';
 	await proposal.save();
 
+	const rejectedProposals = await Proposal.find({
+		project: project._id,
+		_id: { $ne: proposal._id },
+		status: 'pending',
+	})
+		.select('_id freelancer')
+		.lean();
+
 	await Proposal.updateMany(
 		{ project: project._id, _id: { $ne: proposal._id }, status: 'pending' },
 		{ $set: { status: 'rejected' } },
@@ -376,6 +399,30 @@ const acceptProposal = asyncHandler(async (req, res) => {
 		.populate('client', 'fullName avatar')
 		.populate('assignedFreelancer', 'fullName avatar')
 		.lean();
+
+	void createNotification({
+		recipient: proposal.freelancer,
+		sender: req.user._id,
+		type: 'proposal_accepted',
+		title: 'Proposal Accepted!',
+		message: `Your proposal for "${project.title}" was accepted!`,
+		link: `/projects/${project._id}`,
+		metadata: { projectId: project._id, proposalId: proposal._id },
+		io: getIO(),
+	});
+
+	rejectedProposals.forEach((rejectedProposal) => {
+		void createNotification({
+			recipient: rejectedProposal.freelancer,
+			sender: req.user._id,
+			type: 'proposal_rejected',
+			title: 'Proposal Rejected',
+			message: `Your proposal for "${project.title}" was not selected`,
+			link: `/projects/${project._id}`,
+			metadata: { projectId: project._id, proposalId: rejectedProposal._id },
+			io: getIO(),
+		});
+	});
 
 	return res.status(200).json(
 		new ApiResponse(

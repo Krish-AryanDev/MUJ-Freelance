@@ -1,15 +1,17 @@
 {
   "name": "muj-freelance",
+  "version": "1.0.0",
   "private": true,
-  "workspaces": [
-    "client",
-    "server"
-  ],
   "scripts": {
-    "dev:client": "npm --prefix client run dev",
-    "build:client": "npm --prefix client run build",
-    "start:client": "npm --prefix client run start",
-    "dev:server": "npm --prefix server run dev",
-    "start:server": "npm --prefix server run start"
+    "dev": "concurrently \"npm run server\" \"npm run client\"",
+    "client": "cd client && npm run dev",
+    "server": "cd server && npm run dev",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "build": "cd client && npm run build",
+    "start:client": "cd client && npm start",
+    "start:server": "cd server && npm start"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.0"
   }
 }

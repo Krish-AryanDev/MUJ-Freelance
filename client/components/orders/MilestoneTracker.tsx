@@ -17,6 +17,7 @@ const statusProgressMap: Record<string, number> = {
 };
 
 const steps = ['Order Placed', 'In Progress', 'Delivered', 'Completed'];
+const REFERENCE_NOW_MS = Date.now();
 
 const getStepProgress = (status: string): number => {
   if (status === 'completed') {
@@ -47,7 +48,8 @@ export default function MilestoneTracker({
   const progress = statusProgressMap[status] ?? 0;
   const completedSteps = getStepProgress(status);
   const revisionPercent = revisionsAllowed > 0 ? Math.min((revisionsUsed / revisionsAllowed) * 100, 100) : 0;
-  const isOverdue = new Date(deadline).getTime() < Date.now() && status !== 'completed' && status !== 'cancelled';
+  const isOverdue =
+    new Date(deadline).getTime() < REFERENCE_NOW_MS && status !== 'completed' && status !== 'cancelled';
 
   return (
     <div className="space-y-4 rounded-xl border border-zinc-200 bg-white p-4">

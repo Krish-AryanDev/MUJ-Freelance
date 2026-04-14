@@ -2,6 +2,8 @@ import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
+const REVIEW_TYPES = ['client_to_freelancer', 'freelancer_to_client'];
+
 const reviewSchema = new Schema(
 	{
 		order: {
@@ -16,15 +18,23 @@ const reviewSchema = new Schema(
 			default: null,
 			index: true,
 		},
-		from: {
+		reviewer: {
 			type: Schema.Types.ObjectId,
 			ref: 'User',
 			required: true,
+			alias: 'from',
 			index: true,
 		},
-		to: {
+		reviewee: {
 			type: Schema.Types.ObjectId,
 			ref: 'User',
+			required: true,
+			alias: 'to',
+			index: true,
+		},
+		type: {
+			type: String,
+			enum: REVIEW_TYPES,
 			required: true,
 			index: true,
 		},
@@ -36,9 +46,9 @@ const reviewSchema = new Schema(
 		},
 		comment: {
 			type: String,
+			required: true,
 			trim: true,
-			maxlength: 2000,
-			default: '',
+			maxlength: 1000,
 		},
 		isPublic: {
 			type: Boolean,
@@ -51,18 +61,31 @@ const reviewSchema = new Schema(
 	},
 );
 
-reviewSchema.index({ order: 1, from: 1 }, { unique: true });
-reviewSchema.index({ to: 1, createdAt: -1 });
+reviewSchema.index({ order: 1, type: 1 }, { unique: true });
+reviewSchema.index({ reviewee: 1, createdAt: -1 });
+reviewSchema.index({ gig: 1, type: 1, createdAt: -1 });
 
 reviewSchema.pre('validate', function validateParticipants(next) {
-	if (this.from && this.to && this.from.toString() === this.to.toString()) {
-		this.invalidate('to', 'Reviewer and reviewee cannot be the same user');
+	if (this.reviewer && this.reviewee && this.reviewer.toString() === this.reviewee.toString()) {
+		this.invalidate('reviewee', 'Reviewer and reviewee cannot be the same user');
 	}
 
 	next();
 });
 
 const Review = mongoose.models.Review || mongoose.model('Review', reviewSchema);
+
+// Cleanup legacy unique index from old schema (`order + from`) that breaks
+// two-direction reviews with the new reviewer/reviewee fields.
+const cleanupLegacyIndexes = async () => {
+	try {
+		await Review.collection.dropIndex('order_1_from_1');
+	} catch (_error) {
+		// Ignore if index does not exist.
+	}
+};
+
+void cleanupLegacyIndexes();
 
 export { Review };
 export default Review;

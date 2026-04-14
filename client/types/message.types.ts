@@ -1,54 +1,62 @@
-/**
- * Real-time messaging contracts for Socket.io + REST sync.
- */
+import type { ISODateString } from './api.types';
 
-import type { Id, ISODateString } from './api.types';
-import type { User } from './user.types';
+export type MessageType = 'text' | 'image' | 'file' | 'order_update';
 
-export type ConversationType = 'order' | 'project' | 'direct';
-export type MessageType = 'text' | 'file' | 'system';
+export interface MessageParticipant {
+  _id: string;
+  fullName: string;
+  email?: string;
+  avatar?: {
+    url?: string;
+    publicId?: string;
+  };
+}
 
 export interface MessageAttachment {
-  fileName: string;
-  fileUrl: string;
-  mimeType: string;
-  sizeInBytes: number;
+  url: string;
+  filename: string;
+  fileType: string;
+  size?: number;
+}
+
+export interface MessageReadReceipt {
+  user: string | MessageParticipant;
+  readAt: ISODateString;
+}
+
+export interface Message {
+  _id: string;
+  conversation: string;
+  sender: string | MessageParticipant;
+  content: string;
+  messageType: MessageType;
+  attachments: MessageAttachment[];
+  isRead: boolean;
+  readAt?: ISODateString | null;
+  readBy?: MessageReadReceipt[];
+  createdAt: ISODateString;
+  updatedAt: ISODateString;
+  deletedAt?: ISODateString | null;
 }
 
 export interface Conversation {
-  id: Id;
-  type: ConversationType;
-  participants: Array<Pick<User, 'id' | 'fullName' | 'avatar'>>;
-  orderId?: Id;
-  projectId?: Id;
-  lastMessageAt: ISODateString;
+  _id: string;
+  participants: MessageParticipant[];
+  lastMessage?: Message | null;
+  relatedOrder?: string | null;
+  relatedGig?: string | null;
   unreadCount: number;
+  isActive: boolean;
   createdAt: ISODateString;
   updatedAt: ISODateString;
 }
 
-export interface ChatMessage {
-  id: Id;
-  conversationId: Id;
-  sender: Pick<User, 'id' | 'fullName' | 'avatar'>;
-  type: MessageType;
+export interface SendMessagePayload {
   content: string;
-  attachments: MessageAttachment[];
-  isEdited: boolean;
-  readByUserIds: Id[];
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
-}
-
-export interface SendMessageRequest {
-  conversationId: Id;
-  content: string;
-  type?: Exclude<MessageType, 'system'>;
+  messageType?: MessageType;
   attachments?: MessageAttachment[];
 }
 
-export interface TypingEventPayload {
-  conversationId: Id;
-  userId: Id;
-  isTyping: boolean;
+export interface ConversationFilters {
+  search?: string;
 }

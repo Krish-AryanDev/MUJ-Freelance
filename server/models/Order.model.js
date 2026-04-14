@@ -2,11 +2,24 @@ import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
-const ORDER_STATUSES = ['active', 'delivered', 'revision', 'completed', 'cancelled', 'disputed'];
+const ORDER_STATUSES = ['active', 'delivered', 'revision', 'completed', 'cancelled', 'disputed', 'resolved'];
 const PACKAGE_TIERS = ['basic', 'standard', 'premium'];
+
+const createOrderNumber = () => {
+	const timestampPart = Date.now().toString(36).toUpperCase();
+	const randomPart = Math.random().toString(36).slice(2, 8).toUpperCase();
+	return `ORD-${timestampPart}-${randomPart}`;
+};
 
 const orderSchema = new Schema(
 	{
+		orderNumber: {
+			type: String,
+			required: true,
+			unique: true,
+			index: true,
+			trim: true,
+		},
 		gigId: {
 			type: Schema.Types.ObjectId,
 			ref: 'Gig',
@@ -93,6 +106,23 @@ const orderSchema = new Schema(
 			type: Date,
 			default: null,
 		},
+		adminResolution: {
+			note: {
+				type: String,
+				trim: true,
+				default: '',
+				maxlength: 2000,
+			},
+			resolvedAt: {
+				type: Date,
+				default: null,
+			},
+			resolvedBy: {
+				type: Schema.Types.ObjectId,
+				ref: 'User',
+				default: null,
+			},
+		},
 	},
 	{
 		timestamps: true,
@@ -103,6 +133,15 @@ const orderSchema = new Schema(
 orderSchema.index({ clientId: 1, createdAt: -1 });
 orderSchema.index({ freelancerId: 1, createdAt: -1 });
 orderSchema.index({ status: 1, createdAt: -1 });
+
+orderSchema.pre('validate', function assignOrderNumber(next) {
+	// Backfill legacy records created before orderNumber existed.
+	if (!this.orderNumber) {
+		this.orderNumber = createOrderNumber();
+	}
+
+	next();
+});
 
 const Order = mongoose.models.Order || mongoose.model('Order', orderSchema);
 

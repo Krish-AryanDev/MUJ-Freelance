@@ -1,38 +1,70 @@
-/**
- * Review and rating contracts shown after order completion.
- */
-
-import type { Id, ISODateString } from './api.types';
-import type { User } from './user.types';
-
-export interface RatingBreakdown {
-  communication: number;
-  quality: number;
-  valueForMoney: number;
-  wouldRecommend: boolean;
-}
-
 export interface Review {
-  id: Id;
-  orderId: Id;
-  reviewer: Pick<User, 'id' | 'fullName' | 'avatar'>;
-  reviewee: Pick<User, 'id' | 'fullName' | 'avatar'>;
+  _id: string;
+  reviewer: {
+    _id: string;
+    name: string;
+    avatar?: string;
+  };
+  reviewee: {
+    _id: string;
+    name: string;
+    avatar?: string;
+  };
+  gig?: {
+    _id: string;
+    title: string;
+  };
+  order: string;
   rating: number;
   comment: string;
-  breakdown: RatingBreakdown;
-  createdAt: ISODateString;
-  updatedAt: ISODateString;
+  type: 'client_to_freelancer' | 'freelancer_to_client';
+  isPublic: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface CreateReviewRequest {
-  orderId: Id;
+export interface ReviewFormData {
+  orderId: string;
   rating: number;
   comment: string;
-  breakdown: RatingBreakdown;
+  type: 'client_to_freelancer' | 'freelancer_to_client';
+  gigId?: string;
 }
 
-export interface ReviewSummary {
-  averageRating: number;
+export interface RatingBreakdownData {
+  1: number;
+  2: number;
+  3: number;
+  4: number;
+  5: number;
+}
+
+export interface GigReviewsResponse {
+  reviews: Review[];
   totalReviews: number;
-  ratingCounts: Record<1 | 2 | 3 | 4 | 5, number>;
+  averageRating: number;
+  ratingBreakdown: RatingBreakdownData;
+  currentPage: number;
+  totalPages: number;
+}
+
+export interface UserReviewsResponse {
+  reviews: Review[];
+  totalReviews: number;
+  averageRating: number;
+  ratingBreakdown: RatingBreakdownData;
+  currentPage: number;
+  totalPages: number;
+}
+
+export interface OrderReviewsResponse {
+  reviews: Review[];
+  canReviewAsClient: boolean;
+  canReviewAsFreelancer: boolean;
+}
+
+export interface ReviewFilters {
+  page?: number;
+  limit?: number;
+  sort?: 'recent' | 'highest' | 'lowest';
 }

@@ -103,11 +103,11 @@ const getUserPublicProfile = asyncHandler(async (req, res) => {
 		.lean();
 
 	const [totalPublicReviews, gigsPublished, projectsPosted, ordersCompleted] = await Promise.all([
-		Review.countDocuments({ to: user._id, isPublic: true }),
+		Review.countDocuments({ reviewee: user._id, isPublic: true }),
 		Gig.countDocuments({ freelancer: user._id, status: 'published' }),
 		Project.countDocuments({ client: user._id }),
 		Order.countDocuments({
-			$or: [{ client: user._id }, { freelancer: user._id }],
+			$or: [{ clientId: user._id }, { freelancerId: user._id }],
 			status: 'completed',
 		}),
 	]);

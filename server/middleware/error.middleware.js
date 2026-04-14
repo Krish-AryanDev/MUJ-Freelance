@@ -1,9 +1,20 @@
 import multer from 'multer';
+import { validationResult } from 'express-validator';
 
 import ApiError from '../utils/ApiError.js';
 
 const asyncHandler = (handler) => (req, res, next) => {
 	Promise.resolve(handler(req, res, next)).catch(next);
+};
+
+const validateRequest = (req, _res, next) => {
+	const result = validationResult(req);
+
+	if (!result.isEmpty()) {
+		return next(new ApiError(422, 'Validation failed', result.array().map((item) => item.msg)));
+	}
+
+	return next();
 };
 
 const notFoundHandler = (req, _res, next) => {
@@ -60,6 +71,6 @@ const errorHandler = (error, _req, res, next) => {
 	});
 };
 
-export { asyncHandler, errorHandler, notFoundHandler, normalizeError };
+export { asyncHandler, errorHandler, notFoundHandler, normalizeError, validateRequest };
 export default errorHandler;
 

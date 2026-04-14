@@ -1,6 +1,8 @@
 import Gig from '../models/Gig.model.js';
 import Order from '../models/Order.model.js';
+import { getIO } from '../config/socket.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
+import { createNotification } from './notification.controller.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 
@@ -25,8 +27,31 @@ const ensureRole = (req, role) => {
 	return userRoles;
 };
 
-const isOrderParty = (order, userId) =>
-	String(order.clientId) === String(userId) || String(order.freelancerId) === String(userId);
+const getRefId = (value) => {
+	if (!value) {
+		return null;
+	}
+
+	if (typeof value === 'string') {
+		return value;
+	}
+
+	if (typeof value === 'object' && value._id) {
+		return String(value._id);
+	}
+
+	return String(value);
+};
+
+const isOrderParty = (order, userId) => {
+	const clientId = getRefId(order.clientId);
+	const freelancerId = getRefId(order.freelancerId);
+	const currentUserId = String(userId);
+
+	return clientId === currentUserId || freelancerId === currentUserId;
+};
+
+const getUserDisplayName = (user) => user?.fullName || user?.name || 'A user';
 
 const orderPopulate = [
 	{ path: 'gigId', select: 'title images packages' },
@@ -62,21 +87,72 @@ const createOrder = asyncHandler(async (req, res) => {
 		throw new ApiError(400, 'Selected package tier does not exist for this gig');
 	}
 
+	const existingOrder = await Order.findOne({
+		gigId: gig._id,
+		clientId: req.user._id,
+		status: { $in: ['active', 'delivered', 'revision'] },
+	})
+		.sort({ createdAt: -1 })
+		.populate(orderPopulate)
+		.lean();
+
+	if (existingOrder) {
+		return res
+			.status(200)
+			.json(new ApiResponse(200, { order: existingOrder }, 'Existing in-progress order found'));
+	}
+
 	const deliveryDays = Number(selectedPackage.deliveryDays || 1);
 	const deadline = new Date(Date.now() + deliveryDays * 24 * 60 * 60 * 1000);
 
-	const createdOrder = await Order.create({
-		gigId: gig._id,
-		clientId: req.user._id,
-		freelancerId: gig.freelancer,
-		packageTier: normalizedTier,
-		amount: Number(selectedPackage.price || 0),
-		deadline,
-		status: 'active',
-		revisionsAllowed: Number(selectedPackage.revisions || 0),
-	});
+	let createdOrder;
+
+	try {
+		createdOrder = await Order.create({
+			gigId: gig._id,
+			clientId: req.user._id,
+			freelancerId: gig.freelancer,
+			packageTier: normalizedTier,
+			amount: Number(selectedPackage.price || 0),
+			deadline,
+			status: 'active',
+			revisionsAllowed: Number(selectedPackage.revisions || 0),
+		});
+	} catch (error) {
+		if (error?.code !== 11000) {
+			throw error;
+		}
+
+		const duplicateOrder = await Order.findOne({
+			gigId: gig._id,
+			clientId: req.user._id,
+			status: { $in: ['active', 'delivered', 'revision'] },
+		})
+			.sort({ createdAt: -1 })
+			.populate(orderPopulate)
+			.lean();
+
+		if (!duplicateOrder) {
+			throw error;
+		}
+
+		return res
+			.status(200)
+			.json(new ApiResponse(200, { order: duplicateOrder }, 'Existing in-progress order found'));
+	}
 
 	const order = await Order.findById(createdOrder._id).populate(orderPopulate).lean();
+
+	void createNotification({
+		recipient: gig.freelancer,
+		sender: req.user._id,
+		type: 'order_placed',
+		title: 'New Order Received!',
+		message: `${getUserDisplayName(req.user)} placed an order for "${gig.title}"`,
+		link: `/orders/${order._id}`,
+		metadata: { orderId: order._id, gigId: gig._id },
+		io: getIO(),
+	});
 
 	return res.status(201).json(new ApiResponse(201, { order }, 'Order created successfully'));
 });
@@ -173,6 +249,18 @@ const deliverOrder = asyncHandler(async (req, res) => {
 
 	const updatedOrder = await Order.findById(order._id).populate(orderPopulate).lean();
 
+	const gigTitle = updatedOrder?.gigId?.title || 'your order';
+	void createNotification({
+		recipient: order.clientId,
+		sender: req.user._id,
+		type: 'order_delivered',
+		title: 'Order Delivered!',
+		message: `Your order for "${gigTitle}" has been delivered. Please review.`,
+		link: `/orders/${order._id}`,
+		metadata: { orderId: order._id },
+		io: getIO(),
+	});
+
 	return res.status(200).json(new ApiResponse(200, { order: updatedOrder }, 'Order delivered successfully'));
 });
 
@@ -198,7 +286,26 @@ const acceptDelivery = asyncHandler(async (req, res) => {
 
 	await order.save();
 
+	try {
+		const { releasePaymentForOrder } = await import('./payment.controller.js');
+		await releasePaymentForOrder(order._id);
+	} catch (paymentError) {
+		console.error('Payment release error:', paymentError.message);
+		// Do not fail the order acceptance if payment release fails
+	}
+
 	const updatedOrder = await Order.findById(order._id).populate(orderPopulate).lean();
+
+	void createNotification({
+		recipient: order.freelancerId,
+		sender: req.user._id,
+		type: 'order_completed',
+		title: 'Order Completed!',
+		message: `${getUserDisplayName(req.user)} marked the order as complete. Payment released!`,
+		link: `/orders/${order._id}`,
+		metadata: { orderId: order._id },
+		io: getIO(),
+	});
 
 	return res.status(200).json(new ApiResponse(200, { order: updatedOrder }, 'Delivery accepted successfully'));
 });
@@ -258,7 +365,28 @@ const cancelOrder = asyncHandler(async (req, res) => {
 
 	await order.save();
 
+	try {
+		const { refundPaymentForOrder } = await import('./payment.controller.js');
+		await refundPaymentForOrder(order._id);
+	} catch (paymentError) {
+		console.error('Payment refund error:', paymentError.message);
+		// Do not fail the cancellation if refund processing fails
+	}
+
 	const updatedOrder = await Order.findById(order._id).populate(orderPopulate).lean();
+
+	const gigTitle = updatedOrder?.gigId?.title || 'this gig';
+	const recipient = String(order.clientId) === String(req.user._id) ? order.freelancerId : order.clientId;
+	void createNotification({
+		recipient,
+		sender: req.user._id,
+		type: 'order_cancelled',
+		title: 'Order Cancelled',
+		message: `Order for "${gigTitle}" has been cancelled`,
+		link: `/orders/${order._id}`,
+		metadata: { orderId: order._id },
+		io: getIO(),
+	});
 
 	return res.status(200).json(new ApiResponse(200, { order: updatedOrder }, 'Order cancelled successfully'));
 });

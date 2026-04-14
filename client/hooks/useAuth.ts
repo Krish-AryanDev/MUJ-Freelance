@@ -7,6 +7,7 @@ const getSnapshot = () => authStore.getState();
 
 const SERVER_SNAPSHOT = {
   user: null,
+  accessToken: null,
   isAuthenticated: false,
   isLoading: false,
   initialized: false,

@@ -4,6 +4,7 @@ import { authService } from '../services/auth.service';
 
 interface AuthState {
   user: User | null;
+  accessToken: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   initialized: boolean;
@@ -16,6 +17,7 @@ const listeners = new Set<AuthListener>();
 
 let authState: AuthState = {
   user: null,
+  accessToken: null,
   isAuthenticated: false,
   isLoading: false,
   initialized: false,
@@ -41,9 +43,10 @@ const subscribe = (listener: AuthListener): (() => void) => {
 
 const getState = (): AuthState => authState;
 
-const setUser = (user: User | null): void => {
+const setUser = (user: User | null, accessToken?: string | null): void => {
   setState({
     user,
+    accessToken: accessToken ?? authState.accessToken,
     isAuthenticated: Boolean(user),
     initialized: true,
     error: null,
@@ -53,6 +56,7 @@ const setUser = (user: User | null): void => {
 const clearAuth = (): void => {
   setState({
     user: null,
+    accessToken: null,
     isAuthenticated: false,
     initialized: true,
     error: null,
@@ -77,7 +81,7 @@ const initializeAuth = async (): Promise<void> => {
 
   try {
     const user = await authService.getCurrentUser();
-    setUser(user);
+    setUser(user, null);
   } catch (_error) {
     clearAuth();
   } finally {
@@ -91,7 +95,7 @@ const login = async (payload: LoginRequest): Promise<User> => {
 
   try {
     const session = await authService.login(payload);
-    setUser(session.user);
+    setUser(session.user, session.accessToken || null);
     return session.user;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Login failed';
@@ -108,7 +112,7 @@ const register = async (payload: RegisterPayload): Promise<User> => {
 
   try {
     const session = await authService.register(payload);
-    setUser(session.user);
+    setUser(session.user, session.accessToken || null);
     return session.user;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Registration failed';
@@ -137,7 +141,7 @@ const refreshSession = async (): Promise<User | null> => {
 
   try {
     const session = await authService.refreshSession();
-    setUser(session.user);
+    setUser(session.user, session.accessToken || null);
     return session.user;
   } catch (_error) {
     clearAuth();
@@ -153,7 +157,7 @@ const becomeFreelancer = async (): Promise<User> => {
 
   try {
     const user = await authService.becomeFreelancer();
-    setUser(user);
+    setUser(user, authState.accessToken);
     return user;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to update user role';
@@ -187,7 +191,7 @@ const verifyEmailOtp = async (payload: VerifyEmailOtpRequest): Promise<User> => 
 
   try {
     const user = await authService.verifyEmailOtp(payload);
-    setUser(user);
+    setUser(user, authState.accessToken);
     return user;
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Failed to verify OTP';

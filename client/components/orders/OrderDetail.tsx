@@ -1,6 +1,9 @@
 import { useMemo, useState } from 'react';
+import Image from 'next/image';
+import { useQuery } from '@tanstack/react-query';
 
 import type { Order, UserSummary } from '@/types/order.types';
+import { reviewService } from '@/services/review.service';
 import { formatDate, formatDateTime } from '@/utils/formatDate';
 import { formatPrice } from '@/utils/formatPrice';
 import Avatar from '../ui/Avatar';
@@ -8,6 +11,12 @@ import Badge from '../ui/Badge';
 import Button from '../ui/Button';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/Card';
 import Input from '../ui/Input';
+import EmptyState from '../shared/EmptyState';
+import ErrorState from '../shared/ErrorState';
+import RatingBreakdown from '../reviews/RatingBreakdown';
+import ReviewCard from '../reviews/ReviewCard';
+import ReviewForm from '../reviews/ReviewForm';
+import Skeleton from '../ui/Skeleton';
 import Textarea from '../ui/Textarea';
 import MilestoneTracker from './MilestoneTracker';
 import OrderTimeline from './OrderTimeline';
@@ -41,6 +50,9 @@ const getGigTitle = (order: Order): string =>
 
 const getGigImage = (order: Order): string | undefined =>
   typeof order.gigId === 'string' ? undefined : order.gigId.images?.[0]?.url;
+
+const isRenderableGigImage = (url?: string): boolean =>
+  Boolean(url) && !String(url).includes('example.com');
 
 export default function OrderDetail({
   order,
@@ -76,6 +88,38 @@ export default function OrderDetail({
       ? undefined
       : order.gigId.packages?.find((pkg) => pkg.tier === order.packageTier);
 
+  const reviewsQuery = useQuery({
+    queryKey: ['order-reviews', order._id],
+    queryFn: () => reviewService.getOrderReviews(order._id),
+    enabled: order.status === 'completed',
+  });
+
+  const reviewsPayload = reviewsQuery.data?.success
+    ? reviewsQuery.data.data
+    : {
+        reviews: [],
+        canReviewAsClient: false,
+        canReviewAsFreelancer: false,
+      };
+
+  const ratingsSummary = reviewsPayload.reviews.reduce(
+    (accumulator, review) => {
+      accumulator.total += 1;
+      accumulator.sum += review.rating;
+      accumulator.breakdown[review.rating as 1 | 2 | 3 | 4 | 5] += 1;
+      return accumulator;
+    },
+    {
+      total: 0,
+      sum: 0,
+      breakdown: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+    },
+  );
+
+  const averageRating = ratingsSummary.total > 0 ? ratingsSummary.sum / ratingsSummary.total : 0;
+
+  const gigId = typeof order.gigId === 'string' ? undefined : order.gigId._id;
+
   return (
     <div className="space-y-4">
       <Card>
@@ -94,8 +138,16 @@ export default function OrderDetail({
           <CardTitle>Gig Information</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
-          {getGigImage(order) ? (
-            <img src={getGigImage(order)} alt={getGigTitle(order)} className="h-44 w-full rounded-lg object-cover" />
+          {isRenderableGigImage(getGigImage(order)) ? (
+            <div className="relative h-44 w-full overflow-hidden rounded-lg">
+              <Image
+                src={getGigImage(order) || ''}
+                alt={getGigTitle(order)}
+                fill
+                sizes="(max-width: 768px) 100vw, 720px"
+                className="object-cover"
+              />
+            </div>
           ) : null}
           <p className="text-sm text-zinc-700">Package: <span className="font-medium capitalize">{order.packageTier}</span></p>
           <p className="text-sm text-zinc-700">Price: <span className="font-medium">{formatPrice(order.amount)}</span></p>
@@ -267,6 +319,87 @@ export default function OrderDetail({
             </CardContent>
           </Card>
         </>
+      ) : null}
+
+      {order.status === 'completed' ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Reviews</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {reviewsQuery.isLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-32 rounded-lg" />
+                <Skeleton className="h-32 rounded-lg" />
+              </div>
+            ) : null}
+
+            {reviewsQuery.isError ? (
+              <ErrorState
+                title="Unable to load reviews"
+                message={reviewsQuery.error instanceof Error ? reviewsQuery.error.message : 'Please try again.'}
+                onRetry={() => {
+                  void reviewsQuery.refetch();
+                }}
+              />
+            ) : null}
+
+            {!reviewsQuery.isLoading && !reviewsQuery.isError ? (
+              <RatingBreakdown
+                breakdown={ratingsSummary.breakdown}
+                totalReviews={ratingsSummary.total}
+                averageRating={averageRating}
+              />
+            ) : null}
+
+            {!reviewsQuery.isLoading && !reviewsQuery.isError && isClient && reviewsPayload.canReviewAsClient ? (
+              <ReviewForm
+                orderId={order._id}
+                gigId={gigId}
+                revieweeId={String(freelancer?._id || order.freelancerId)}
+                revieweeName={freelancer?.fullName || 'Freelancer'}
+                type="client_to_freelancer"
+                onSuccess={() => {
+                  void reviewsQuery.refetch();
+                }}
+                onCancel={() => {
+                  void 0;
+                }}
+              />
+            ) : null}
+
+            {!reviewsQuery.isLoading && !reviewsQuery.isError && isFreelancer && reviewsPayload.canReviewAsFreelancer ? (
+              <ReviewForm
+                orderId={order._id}
+                gigId={gigId}
+                revieweeId={String(client?._id || order.clientId)}
+                revieweeName={client?.fullName || 'Client'}
+                type="freelancer_to_client"
+                onSuccess={() => {
+                  void reviewsQuery.refetch();
+                }}
+                onCancel={() => {
+                  void 0;
+                }}
+              />
+            ) : null}
+
+            {!reviewsQuery.isLoading && !reviewsQuery.isError && reviewsPayload.reviews.length === 0 ? (
+              <EmptyState
+                title="No reviews yet"
+                description="Reviews for this completed order will appear here."
+              />
+            ) : null}
+
+            {!reviewsQuery.isLoading && !reviewsQuery.isError && reviewsPayload.reviews.length > 0 ? (
+              <div className="space-y-3">
+                {reviewsPayload.reviews.map((review) => (
+                  <ReviewCard key={review._id} review={review} />
+                ))}
+              </div>
+            ) : null}
+          </CardContent>
+        </Card>
       ) : null}
     </div>
   );

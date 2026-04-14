@@ -13,9 +13,14 @@ import morgan from 'morgan';
 import { connectDBWithRetry, disconnectDB, mongoose } from './config/db.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 import authRoutes from './routes/auth.routes.js';
+import adminRoutes from './routes/admin.routes.js';
 import gigRoutes from './routes/gig.routes.js';
+import messageRoutes from './routes/message.routes.js';
+import notificationRoutes from './routes/notification.routes.js';
 import orderRoutes from './routes/order.routes.js';
+import paymentRoutes from './routes/payment.routes.js';
 import projectRoutes from './routes/project.routes.js';
+import reviewRoutes from './routes/review.routes.js';
 import userRoutes from './routes/user.routes.js';
 import { initSocket } from './config/socket.js';
 import ApiError from './utils/ApiError.js';
@@ -86,10 +91,32 @@ app.get('/api/health', (_req, res) => {
 	);
 });
 
+app.use('/api', (req, _res, next) => {
+	if (req.path === '/health') {
+		return next();
+	}
+
+	if (mongoose.connection.readyState !== 1) {
+		return next(
+			new ApiError(
+				503,
+				'Database is currently unavailable. Please check MongoDB connection/whitelist and try again.',
+			),
+		);
+	}
+
+	return next();
+});
+
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/gigs', gigRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/orders', orderRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/reviews', reviewRoutes);
 app.use('/api/users', userRoutes);
 
 app.use(notFoundHandler);

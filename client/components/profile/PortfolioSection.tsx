@@ -1,3 +1,5 @@
+import Image from 'next/image';
+
 import { classNames, truncateText } from '../../utils/helpers';
 
 interface PortfolioItem {
@@ -33,7 +35,16 @@ export default function PortfolioSection({
           {items.map((item) => (
             <article key={item.id} className="overflow-hidden rounded-lg border border-zinc-200">
               {item.imageUrl ? (
-                <img src={item.imageUrl} alt={item.title} className="h-40 w-full object-cover" loading="lazy" />
+                <div className="relative h-40 w-full">
+                  <Image
+                    src={item.imageUrl}
+                    alt={item.title}
+                    fill
+                    unoptimized
+                    sizes="(max-width: 768px) 100vw, 420px"
+                    className="object-cover"
+                  />
+                </div>
               ) : (
                 <div className="flex h-40 items-center justify-center bg-zinc-100 text-sm text-zinc-500">
                   No preview image

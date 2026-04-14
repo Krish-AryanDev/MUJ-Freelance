@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 
 const { Schema } = mongoose;
 
-const GIG_STATUSES = ['active', 'draft', 'published', 'paused', 'archived'];
+const GIG_STATUSES = ['active', 'inactive', 'draft', 'published', 'paused', 'archived'];
 const GIG_CATEGORIES = [
 	'WEB_DEVELOPMENT',
 	'APP_DEVELOPMENT',

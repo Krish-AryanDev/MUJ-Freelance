@@ -30,7 +30,7 @@ interface FiltersState {
 }
 
 export default function Page() {
-  const { isClient } = useAuth();
+  const { isClient, isFreelancer } = useAuth();
 
   const [filters, setFilters] = useState<FiltersState>({
     page: 1,
@@ -73,10 +73,20 @@ export default function Page() {
           <p className="text-sm text-zinc-600">Discover client job posts and send proposals.</p>
         </div>
 
-        {isClient ? (
-          <Link href="/dashboard/client/projects">
-            <Button>Post a Project</Button>
-          </Link>
+        {isClient || isFreelancer ? (
+          <div className="flex items-center gap-2">
+            {isFreelancer ? (
+              <Link href="/dashboard/freelancer/proposals">
+                <Button variant="outline">View My Proposals</Button>
+              </Link>
+            ) : null}
+
+            {isClient ? (
+              <Link href="/dashboard/client/projects">
+                <Button>Post a Project</Button>
+              </Link>
+            ) : null}
+          </div>
         ) : null}
       </div>
 

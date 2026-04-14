@@ -75,6 +75,7 @@ const unwrapResponse = <TData>(response: AxiosResponse<ApiResponse<TData>>): TDa
 const mapAuthPayload = (payload: AuthPayload): LoginResponse => ({
   user: normalizeUser(payload.user),
   accessTokenIssued: Boolean(payload.accessToken),
+  accessToken: payload.accessToken || '',
 });
 
 const register = async (payload: RegisterPayload): Promise<LoginResponse> => {

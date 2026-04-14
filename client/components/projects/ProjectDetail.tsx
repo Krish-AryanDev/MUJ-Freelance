@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Proposal, Project } from '../../types/project.types';
 import Badge from '../ui/Badge';
 import Button from '../ui/Button';
@@ -8,6 +9,7 @@ interface ProjectDetailProps {
   project: Project;
   proposals?: Proposal[];
   showSubmitProposalButton?: boolean;
+  showViewMyProposalsButton?: boolean;
   onClickSubmitProposal?: () => void;
   isOwner?: boolean;
   onAcceptProposal?: (proposalId: string) => void;
@@ -27,6 +29,7 @@ export default function ProjectDetail({
   project,
   proposals = [],
   showSubmitProposalButton = false,
+  showViewMyProposalsButton = false,
   onClickSubmitProposal,
   isOwner = false,
   onAcceptProposal,
@@ -74,9 +77,22 @@ export default function ProjectDetail({
             ) : null}
 
             {showSubmitProposalButton ? (
-              <Button type="button" onClick={onClickSubmitProposal}>
-                Submit proposal
-              </Button>
+              <div className="flex flex-wrap gap-2">
+                <Button type="button" onClick={onClickSubmitProposal}>
+                  Submit proposal
+                </Button>
+                {showViewMyProposalsButton ? (
+                  <Link href="/dashboard/freelancer/proposals">
+                    <Button type="button" variant="outline">View My Proposals</Button>
+                  </Link>
+                ) : null}
+              </div>
+            ) : null}
+
+            {!showSubmitProposalButton && showViewMyProposalsButton ? (
+              <Link href="/dashboard/freelancer/proposals">
+                <Button type="button" variant="outline">View My Proposals</Button>
+              </Link>
             ) : null}
           </CardContent>
         </Card>

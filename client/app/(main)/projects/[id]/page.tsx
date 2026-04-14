@@ -83,6 +83,7 @@ export default function Page() {
         proposals={proposalsQuery.data ?? []}
         isOwner={isOwner}
         showSubmitProposalButton={canShowProposalForm}
+        showViewMyProposalsButton={Boolean(user?.id) && isFreelancer}
         onClickSubmitProposal={() => setShowProposalForm((current) => !current)}
         acceptingProposalId={acceptProposalMutation.variables ?? null}
         onAcceptProposal={(proposalId) => {

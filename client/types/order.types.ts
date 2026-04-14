@@ -1,7 +1,14 @@
 import type { ApiResponse, ISODateString } from './api.types';
 
 export type PackageTier = 'basic' | 'standard' | 'premium';
-export type OrderStatus = 'active' | 'delivered' | 'revision' | 'completed' | 'cancelled' | 'disputed';
+export type OrderStatus =
+  | 'active'
+  | 'delivered'
+  | 'revision'
+  | 'completed'
+  | 'cancelled'
+  | 'disputed'
+  | 'resolved';
 
 export interface GigSummary {
   _id: string;
