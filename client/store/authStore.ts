@@ -1,5 +1,10 @@
 import type { LoginRequest, User, VerifyEmailOtpRequest } from '../types/user.types';
-import type { RegisterPayload, SendVerificationOtpPayload, SendVerificationOtpResponse } from '../services/auth.service';
+import type {
+  AuthServiceError,
+  RegisterPayload,
+  SendVerificationOtpPayload,
+  SendVerificationOtpResponse,
+} from '../services/auth.service';
 import { authService } from '../services/auth.service';
 
 interface AuthState {
@@ -71,6 +76,22 @@ const setError = (error: string | null): void => {
   setState({ error });
 };
 
+const isTransientAuthFailure = (error: AuthServiceError): boolean => {
+  if (error.isNetworkError) {
+    return true;
+  }
+
+  if (error.statusCode === 503) {
+    return true;
+  }
+
+  return typeof error.statusCode === 'number' && error.statusCode >= 500;
+};
+
+const isUnauthorizedAuthFailure = (error: AuthServiceError): boolean => {
+  return error.statusCode === 401 || error.statusCode === 403;
+};
+
 const initializeAuth = async (): Promise<void> => {
   if (authState.initialized && authState.user) {
     return;
@@ -82,8 +103,14 @@ const initializeAuth = async (): Promise<void> => {
   try {
     const user = await authService.getCurrentUser();
     setUser(user, null);
-  } catch (_error) {
-    clearAuth();
+  } catch (error) {
+    const authError = error as AuthServiceError;
+
+    if (isTransientAuthFailure(authError)) {
+      setError(authError.message || 'Server unavailable. Retrying when connection is restored.');
+    } else {
+      clearAuth();
+    }
   } finally {
     setState({ isLoading: false, initialized: true });
   }
@@ -143,9 +170,21 @@ const refreshSession = async (): Promise<User | null> => {
     const session = await authService.refreshSession();
     setUser(session.user, session.accessToken || null);
     return session.user;
-  } catch (_error) {
-    clearAuth();
-    return null;
+  } catch (error) {
+    const authError = error as AuthServiceError;
+
+    if (isTransientAuthFailure(authError)) {
+      setError(authError.message || 'Session refresh failed due to temporary server issue.');
+      return authState.user;
+    }
+
+    if (isUnauthorizedAuthFailure(authError)) {
+      clearAuth();
+      return null;
+    }
+
+    setError(authError.message || 'Failed to refresh session');
+    return authState.user;
   } finally {
     setLoading(false);
   }

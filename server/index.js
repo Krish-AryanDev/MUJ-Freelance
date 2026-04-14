@@ -46,6 +46,29 @@ const DB_STATE_MAP = {
 	3: 'disconnecting',
 };
 
+const RECONNECT_COOLDOWN_MS = 15_000;
+let reconnectInProgress = false;
+let lastReconnectAttemptAt = 0;
+
+const triggerReconnectIfNeeded = () => {
+	const now = Date.now();
+
+	if (reconnectInProgress || now - lastReconnectAttemptAt < RECONNECT_COOLDOWN_MS) {
+		return;
+	}
+
+	reconnectInProgress = true;
+	lastReconnectAttemptAt = now;
+
+	void connectDBWithRetry({ retries: 3, delayMs: 2000 })
+		.catch((error) => {
+			console.warn('Background Mongo reconnect failed:', error?.message || error);
+		})
+		.finally(() => {
+			reconnectInProgress = false;
+		});
+};
+
 app.set('trust proxy', 1);
 
 app.use(
@@ -97,6 +120,8 @@ app.use('/api', (req, _res, next) => {
 	}
 
 	if (mongoose.connection.readyState !== 1) {
+		triggerReconnectIfNeeded();
+
 		return next(
 			new ApiError(
 				503,

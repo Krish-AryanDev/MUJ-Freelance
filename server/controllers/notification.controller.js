@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 
+import { io, toUserRoomId } from '../config/socket.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
 import Notification from '../models/Notification.model.js';
 import ApiError from '../utils/ApiError.js';
@@ -169,7 +170,7 @@ const deleteAllRead = asyncHandler(async (req, res) => {
 	return res.status(200).json(new ApiResponse(200, null, 'Read notifications deleted successfully'));
 });
 
-const createNotification = async ({ recipient, sender, type, title, message, link, metadata, io }) => {
+const createNotification = async ({ recipient, sender, type, title, message, link, metadata }) => {
 	try {
 		if (!recipient || !type || !title || !message) {
 			return null;
@@ -190,7 +191,7 @@ const createNotification = async ({ recipient, sender, type, title, message, lin
 			.lean();
 
 		if (io && emittedNotification) {
-			io.to(String(recipient)).emit('new_notification', toNotificationPayload(emittedNotification));
+			io.to(toUserRoomId(recipient)).emit('new_notification', toNotificationPayload(emittedNotification));
 		}
 
 		return emittedNotification ? toNotificationPayload(emittedNotification) : null;
@@ -208,13 +209,4 @@ export {
 	getUnreadCount,
 	markAllAsRead,
 	markAsRead,
-};
-
-export default {
-	getNotifications,
-	getUnreadCount,
-	markAsRead,
-	markAllAsRead,
-	deleteNotification,
-	deleteAllRead,
 };

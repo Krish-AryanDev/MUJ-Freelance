@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios';
 import type { AxiosResponse } from 'axios';
 
 import { apiClient } from '../lib/axios';
@@ -41,6 +42,22 @@ interface SendVerificationOtpResponse {
 interface VerifyEmailOtpResponse {
   user: BackendUser;
 }
+
+interface AuthServiceError extends Error {
+  statusCode?: number;
+  isNetworkError?: boolean;
+}
+
+const toAuthServiceError = (error: unknown, fallback: string): AuthServiceError => {
+  const normalizedError = new Error(getErrorMessage(error, fallback)) as AuthServiceError;
+
+  if (error instanceof AxiosError) {
+    normalizedError.statusCode = error.response?.status;
+    normalizedError.isNetworkError = !error.response;
+  }
+
+  return normalizedError;
+};
 
 const normalizeUser = (user: BackendUser): User => {
   const normalizedId = user.id ?? user._id;
@@ -96,7 +113,7 @@ const register = async (payload: RegisterPayload): Promise<LoginResponse> => {
 
     return mapAuthPayload(unwrapResponse(response));
   } catch (error) {
-    throw new Error(getErrorMessage(error, 'Failed to register user'));
+    throw toAuthServiceError(error, 'Failed to register user');
   }
 };
 
@@ -105,7 +122,7 @@ const login = async (payload: LoginRequest): Promise<LoginResponse> => {
     const response = await apiClient.post<ApiResponse<AuthPayload>>('/auth/login', payload);
     return mapAuthPayload(unwrapResponse(response));
   } catch (error) {
-    throw new Error(getErrorMessage(error, 'Failed to login'));
+    throw toAuthServiceError(error, 'Failed to login');
   }
 };
 
@@ -113,7 +130,7 @@ const logout = async (): Promise<void> => {
   try {
     await apiClient.post<ApiResponse<null>>('/auth/logout');
   } catch (error) {
-    throw new Error(getErrorMessage(error, 'Failed to logout'));
+    throw toAuthServiceError(error, 'Failed to logout');
   }
 };
 
@@ -122,7 +139,7 @@ const refreshSession = async (): Promise<LoginResponse> => {
     const response = await apiClient.post<ApiResponse<AuthPayload>>('/auth/refresh-token');
     return mapAuthPayload(unwrapResponse(response));
   } catch (error) {
-    throw new Error(getErrorMessage(error, 'Failed to refresh session'));
+    throw toAuthServiceError(error, 'Failed to refresh session');
   }
 };
 
@@ -132,7 +149,7 @@ const getCurrentUser = async (): Promise<User> => {
     const payload = unwrapResponse(response);
     return normalizeUser(payload.user);
   } catch (error) {
-    throw new Error(getErrorMessage(error, 'Failed to fetch current user'));
+    throw toAuthServiceError(error, 'Failed to fetch current user');
   }
 };
 
@@ -142,7 +159,7 @@ const becomeFreelancer = async (): Promise<User> => {
     const payload = unwrapResponse(response);
     return normalizeUser(payload.user);
   } catch (error) {
-    throw new Error(getErrorMessage(error, 'Failed to enable freelancer role'));
+    throw toAuthServiceError(error, 'Failed to enable freelancer role');
   }
 };
 
@@ -157,7 +174,7 @@ const sendVerificationOtp = async (
 
     return unwrapResponse(response);
   } catch (error) {
-    throw new Error(getErrorMessage(error, 'Failed to send verification OTP'));
+    throw toAuthServiceError(error, 'Failed to send verification OTP');
   }
 };
 
@@ -171,7 +188,7 @@ const verifyEmailOtp = async (payload: VerifyEmailOtpRequest): Promise<User> => 
     const data = unwrapResponse(response);
     return normalizeUser(data.user);
   } catch (error) {
-    throw new Error(getErrorMessage(error, 'Failed to verify email OTP'));
+    throw toAuthServiceError(error, 'Failed to verify email OTP');
   }
 };
 
@@ -191,4 +208,4 @@ export const authService = {
   hasRole,
 };
 
-export type { RegisterPayload, SendVerificationOtpPayload, SendVerificationOtpResponse };
+export type { AuthServiceError, RegisterPayload, SendVerificationOtpPayload, SendVerificationOtpResponse };

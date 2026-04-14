@@ -19,6 +19,7 @@ const conversationPopulate = [
 const messagePopulate = [{ path: 'sender', select: 'fullName avatar email' }];
 
 const toUserId = (value) => String(value?._id || value || '');
+const toUserRoomId = (userId) => String(userId || '');
 
 const isParticipant = (conversation, userId) => {
 	const normalizedUserId = String(userId);
@@ -266,12 +267,12 @@ const sendMessage = asyncHandler(async (req, res) => {
 			.filter((participantId) => participantId !== String(req.user._id));
 
 		recipients.forEach((recipientId) => {
-			io.to(`user:${recipientId}`).emit('new_message', {
+			io.to(toUserRoomId(recipientId)).emit('new_message', {
 				conversationId: id,
 				message: payload,
 			});
 
-			io.to(`user:${recipientId}`).emit('conversation_updated', {
+			io.to(toUserRoomId(recipientId)).emit('conversation_updated', {
 				conversationId: id,
 				lastMessage: payload,
 				updatedAt: new Date().toISOString(),
