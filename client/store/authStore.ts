@@ -30,6 +30,33 @@ let authState: AuthState = {
 };
 
 let authInitializationPromise: Promise<void> | null = null;
+const AUTH_SESSION_HINT_KEY = 'muj_auth_session_hint';
+
+const canUseStorage = (): boolean => typeof window !== 'undefined';
+
+const setSessionHint = (): void => {
+  if (!canUseStorage()) {
+    return;
+  }
+
+  window.localStorage.setItem(AUTH_SESSION_HINT_KEY, '1');
+};
+
+const clearSessionHint = (): void => {
+  if (!canUseStorage()) {
+    return;
+  }
+
+  window.localStorage.removeItem(AUTH_SESSION_HINT_KEY);
+};
+
+const hasSessionHint = (): boolean => {
+  if (!canUseStorage()) {
+    return false;
+  }
+
+  return window.localStorage.getItem(AUTH_SESSION_HINT_KEY) === '1';
+};
 
 const emitChange = (): void => {
   listeners.forEach((listener) => listener());
@@ -51,6 +78,12 @@ const subscribe = (listener: AuthListener): (() => void) => {
 const getState = (): AuthState => authState;
 
 const setUser = (user: User | null, accessToken?: string | null): void => {
+  if (user) {
+    setSessionHint();
+  } else {
+    clearSessionHint();
+  }
+
   setState({
     user,
     accessToken: accessToken ?? authState.accessToken,
@@ -61,6 +94,8 @@ const setUser = (user: User | null, accessToken?: string | null): void => {
 };
 
 const clearAuth = (): void => {
+  clearSessionHint();
+
   setState({
     user: null,
     accessToken: null,
@@ -95,7 +130,20 @@ const isUnauthorizedAuthFailure = (error: AuthServiceError): boolean => {
 };
 
 const initializeAuth = async (): Promise<void> => {
-  if (authState.initialized && authState.user) {
+  if (authState.initialized) {
+    return;
+  }
+
+  // Skip /auth/me for first-time guests to avoid expected 401 noise in console.
+  if (!hasSessionHint()) {
+    setState({
+      user: null,
+      accessToken: null,
+      isAuthenticated: false,
+      isLoading: false,
+      initialized: true,
+      error: null,
+    });
     return;
   }
 

@@ -67,7 +67,7 @@ export interface Gig {
 }
 
 export interface GigFilters {
-  category?: GigCategory;
+  category?: GigCategory | GigCategory[];
   minPrice?: number;
   maxPrice?: number;
   minRating?: number;

@@ -51,6 +51,25 @@ const RECONNECT_COOLDOWN_MS = 15_000;
 let reconnectInProgress = false;
 let lastReconnectAttemptAt = 0;
 
+const wait = async (ms) =>
+	new Promise((resolve) => {
+		setTimeout(resolve, ms);
+	});
+
+const waitForDatabaseReady = async (timeoutMs = 4000, intervalMs = 200) => {
+	const startedAt = Date.now();
+
+	while (Date.now() - startedAt < timeoutMs) {
+		if (mongoose.connection.readyState === 1) {
+			return true;
+		}
+
+		await wait(intervalMs);
+	}
+
+	return mongoose.connection.readyState === 1;
+};
+
 const triggerReconnectIfNeeded = () => {
 	const now = Date.now();
 
@@ -115,13 +134,19 @@ app.get('/api/health', (_req, res) => {
 	);
 });
 
-app.use('/api', (req, _res, next) => {
+app.use('/api', async (req, _res, next) => {
 	if (req.path === '/health') {
 		return next();
 	}
 
 	if (mongoose.connection.readyState !== 1) {
 		triggerReconnectIfNeeded();
+
+		const becameReady = await waitForDatabaseReady(5000, 250);
+
+		if (becameReady) {
+			return next();
+		}
 
 		return next(
 			new ApiError(

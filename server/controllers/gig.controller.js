@@ -170,7 +170,16 @@ const listGigs = asyncHandler(async (req, res) => {
 	const filters = {};
 
 	if (category) {
-		filters.category = String(category);
+		const categories = String(category)
+			.split(',')
+			.map((item) => item.trim())
+			.filter(Boolean);
+
+		if (categories.length === 1) {
+			filters.category = categories[0];
+		} else if (categories.length > 1) {
+			filters.category = { $in: categories };
+		}
 	}
 
 	if (status && allowedStatuses.includes(String(status))) {

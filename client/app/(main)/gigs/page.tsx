@@ -2,6 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import {
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
   Filter,
@@ -117,16 +118,17 @@ const getPageNumbers = (currentPage: number, totalPages: number): number[] => {
 
 export default function Page() {
   const [page, setPage] = useState(1);
-  const [category, setCategory] = useState<GigCategory | undefined>(undefined);
+  const [selectedCategories, setSelectedCategories] = useState<GigCategory[]>([]);
   const [filters, setFilters] = useState<GigFiltersType>({ sortBy: 'relevance' });
   const [draftFilters, setDraftFilters] = useState<GigFiltersType>({ sortBy: 'relevance' });
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false);
 
   const query = {
     page,
     limit: 12,
-    category,
+    category: selectedCategories.length > 0 ? selectedCategories : undefined,
     ...filters,
   };
 
@@ -150,8 +152,11 @@ export default function Page() {
   const activeChips = useMemo(() => {
     const chips: Array<{ key: string; label: string }> = [];
 
-    if (category) {
-      chips.push({ key: 'category', label: getCategoryLabel(category) });
+    if (selectedCategories.length > 0) {
+      chips.push({
+        key: 'category',
+        label: `Categories: ${selectedCategories.map((item) => getCategoryLabel(item)).join(', ')}`,
+      });
     }
 
     if (filters.search) {
@@ -174,7 +179,7 @@ export default function Page() {
     }
 
     return chips;
-  }, [category, filters.deliveryDaysMax, filters.maxPrice, filters.minPrice, filters.minRating, filters.search]);
+  }, [filters.deliveryDaysMax, filters.maxPrice, filters.minPrice, filters.minRating, filters.search, selectedCategories]);
 
   const pageNumbers = useMemo(() => getPageNumbers(currentPage, totalPages), [currentPage, totalPages]);
 
@@ -187,7 +192,7 @@ export default function Page() {
 
   const resetAllFilters = () => {
     const resetState: GigFiltersType = { sortBy: 'relevance' };
-    setCategory(undefined);
+    setSelectedCategories([]);
     setFilters(resetState);
     setDraftFilters(resetState);
     setPage(1);
@@ -195,7 +200,7 @@ export default function Page() {
 
   const removeChip = (key: string) => {
     if (key === 'category') {
-      setCategory(undefined);
+      setSelectedCategories([]);
       setPage(1);
       return;
     }
@@ -231,42 +236,82 @@ export default function Page() {
 
       <div className="mb-4 border-b border-gray-100 pb-4 last:border-0">
         <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-700">Category</h4>
-        <select
-          value={category || ''}
-          onChange={(event) => {
-            const nextCategory = event.target.value as GigCategory | '';
-            setCategory(nextCategory || undefined);
-            setPage(1);
-          }}
-          className="w-full cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-orange-500 focus:outline-none"
+        <button
+          type="button"
+          onClick={() => setCategoryDropdownOpen((previous) => !previous)}
+          className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:border-orange-300"
         >
-          <option value="">All Categories</option>
-          {CATEGORIES.map((item) => (
-            <option key={item.value} value={item.value}>
-              {item.label}
-            </option>
-          ))}
-        </select>
+          <span>
+            {selectedCategories.length > 0
+              ? `${selectedCategories.length} categories selected`
+              : 'Select categories'}
+          </span>
+          <ChevronDown
+            size={16}
+            className={`transition-transform ${categoryDropdownOpen ? 'rotate-180' : ''}`}
+          />
+        </button>
 
-        {category ? (
+        <div
+          className={`mt-2 overflow-hidden rounded-lg border border-gray-100 bg-gray-50/40 transition-all ${
+            categoryDropdownOpen ? 'max-h-72 p-2' : 'max-h-0 border-0 p-0'
+          }`}
+        >
+          <div className="max-h-64 space-y-2 overflow-y-auto pr-1">
+            {CATEGORIES.map((item) => {
+              const checked = selectedCategories.includes(item.value);
+              return (
+                <label key={item.value} className="group flex cursor-pointer items-center gap-2.5">
+                  <input
+                    type="checkbox"
+                    className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-orange-500"
+                    checked={checked}
+                    onChange={() => {
+                      setSelectedCategories((previous) => {
+                        if (previous.includes(item.value)) {
+                          return previous.filter((value) => value !== item.value);
+                        }
+
+                        return [...previous, item.value];
+                      });
+                      setPage(1);
+                    }}
+                  />
+                  <span className="cursor-pointer text-sm text-gray-600 group-hover:text-gray-900">
+                    {categoryEmoji[item.value] || '💼'} {item.label}
+                  </span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+
+        {selectedCategories.length > 0 ? (
           <div className="mt-3 rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-2">
             <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-orange-600">
-              Selected Category
+              Selected Categories
             </p>
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700">
-              {categoryEmoji[category] || '💼'} {getCategoryLabel(category)}
-              <button
-                type="button"
-                onClick={() => {
-                  setCategory(undefined);
-                  setPage(1);
-                }}
-                className="inline-flex h-4 w-4 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-orange-100 hover:text-orange-600"
-                aria-label="Clear selected category"
-              >
-                <X size={12} />
-              </button>
-            </span>
+            <div className="flex flex-wrap gap-1.5">
+              {selectedCategories.map((item) => (
+                <span
+                  key={item}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700"
+                >
+                  {categoryEmoji[item] || '💼'} {getCategoryLabel(item)}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedCategories((previous) => previous.filter((value) => value !== item));
+                      setPage(1);
+                    }}
+                    className="inline-flex h-4 w-4 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-orange-100 hover:text-orange-600"
+                    aria-label={`Remove ${getCategoryLabel(item)} category`}
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
           </div>
         ) : null}
       </div>
@@ -387,16 +432,6 @@ export default function Page() {
       <div className="relative xl:pl-[280px]">
         <div className="mx-auto w-full max-w-[1400px] px-4 py-6 lg:px-6">
           <main className="space-y-5">
-            <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <h2 className="text-3xl font-bold leading-none text-gray-900">Browse Gigs</h2>
-                <p className="mt-1 text-sm text-gray-500">Discover MUJ freelance services</p>
-              </div>
-              <div className="rounded-full bg-orange-50 px-4 py-1.5 text-xs font-semibold text-orange-600">
-                {totalCount} gigs available
-              </div>
-            </div>
-
             <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap items-center gap-2">
                 <button
@@ -510,36 +545,42 @@ export default function Page() {
                 </div>
               </div>
 
-              <div className="flex gap-2 overflow-x-auto pb-1">
+              <div className="flex snap-x snap-mandatory gap-2 overflow-x-auto pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                 <button
                   type="button"
                   onClick={() => {
-                    setCategory(undefined);
+                    setSelectedCategories([]);
                     setPage(1);
                   }}
                   className={
-                    !category
-                      ? 'whitespace-nowrap rounded-xl border border-orange-500 bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-600'
-                      : 'whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:border-orange-300 hover:text-orange-600'
+                    selectedCategories.length === 0
+                      ? 'snap-start flex-none whitespace-nowrap rounded-xl border border-orange-500 bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-600'
+                      : 'snap-start flex-none whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:border-orange-300 hover:text-orange-600'
                   }
                 >
                   All
                 </button>
 
                 {CATEGORIES.map((item) => {
-                  const active = category === item.value;
+                  const active = selectedCategories.includes(item.value);
                   return (
                     <button
                       key={item.value}
                       type="button"
                       onClick={() => {
-                        setCategory(active ? undefined : item.value);
+                        setSelectedCategories((previous) => {
+                          if (previous.includes(item.value)) {
+                            return previous.filter((value) => value !== item.value);
+                          }
+
+                          return [...previous, item.value];
+                        });
                         setPage(1);
                       }}
                       className={
                         active
-                          ? 'whitespace-nowrap rounded-xl border border-orange-500 bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-600'
-                          : 'whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:border-orange-300 hover:text-orange-600'
+                          ? 'snap-start flex-none whitespace-nowrap rounded-xl border border-orange-500 bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-600'
+                          : 'snap-start flex-none whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:border-orange-300 hover:text-orange-600'
                       }
                     >
                       {categoryEmoji[item.value] || '💼'} {item.label}

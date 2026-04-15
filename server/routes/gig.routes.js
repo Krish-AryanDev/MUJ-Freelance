@@ -174,7 +174,23 @@ const listValidation = [
 	query('limit').optional().isInt({ min: 1, max: 50 }).withMessage('Limit must be between 1 and 50'),
 	query('category')
 		.optional()
-		.isIn(GIG_CATEGORIES),
+		.custom((value) => {
+			if (Array.isArray(value)) {
+				return value.every((item) => GIG_CATEGORIES.includes(String(item)));
+			}
+
+			const categories = String(value)
+				.split(',')
+				.map((item) => item.trim())
+				.filter(Boolean);
+
+			if (categories.length === 0) {
+				return true;
+			}
+
+			return categories.every((item) => GIG_CATEGORIES.includes(item));
+		})
+		.withMessage('Invalid gig category'),
 	query('search').optional().isString().withMessage('Search must be a string'),
 	query('status')
 		.optional()
