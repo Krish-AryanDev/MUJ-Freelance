@@ -8,6 +8,7 @@ import {
   Filter,
   LayoutGrid,
   List,
+  Search,
   SlidersHorizontal,
   X,
 } from 'lucide-react';
@@ -228,18 +229,18 @@ export default function Page() {
   };
 
   const renderFilterSidebar = () => (
-    <div className="h-full bg-white p-4">
-      <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900">
+    <div className="h-full bg-[#fffdf8] p-4">
+      <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-[#1d3557]">
         <SlidersHorizontal className="h-4 w-4 text-[#8fae8e]" />
         Filter
       </h3>
 
-      <div className="mb-4 border-b border-gray-100 pb-4 last:border-0">
-        <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-700">Category</h4>
+      <div className="mb-4 border-b border-[#f2e6d8] pb-4 last:border-0">
+        <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-[#3a506b]">Category</h4>
         <button
           type="button"
           onClick={() => setCategoryDropdownOpen((previous) => !previous)}
-          className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:border-[#a9c29f]"
+          className="flex w-full items-center justify-between rounded-xl border border-[#eadfce] bg-white px-3 py-2 text-left text-sm text-[#3a506b] transition-colors hover:border-[#a9c29f]"
         >
           <span>
             {selectedCategories.length > 0
@@ -253,7 +254,7 @@ export default function Page() {
         </button>
 
         <div
-          className={`mt-2 overflow-hidden rounded-lg border border-gray-100 bg-gray-50/40 transition-all ${
+          className={`mt-2 overflow-hidden rounded-xl border border-[#f2e6d8] bg-[#fbfaf6] transition-all ${
             categoryDropdownOpen ? 'max-h-72 p-2' : 'max-h-0 border-0 p-0'
           }`}
         >
@@ -277,7 +278,7 @@ export default function Page() {
                       setPage(1);
                     }}
                   />
-                  <span className="cursor-pointer text-sm text-gray-600 group-hover:text-gray-900">
+                  <span className="cursor-pointer text-sm text-[#5f7285] group-hover:text-[#1d3557]">
                     {categoryEmoji[item.value] || '💼'} {item.label}
                   </span>
                 </label>
@@ -295,7 +296,7 @@ export default function Page() {
               {selectedCategories.map((item) => (
                 <span
                   key={item}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[#c9d9c3] bg-white px-2.5 py-1 text-xs font-medium text-gray-700"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#c9d9c3] bg-white px-2.5 py-1 text-xs font-medium text-[#3a506b]"
                 >
                   {categoryEmoji[item] || '💼'} {getCategoryLabel(item)}
                   <button
@@ -304,7 +305,7 @@ export default function Page() {
                       setSelectedCategories((previous) => previous.filter((value) => value !== item));
                       setPage(1);
                     }}
-                    className="inline-flex h-4 w-4 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-[#e2eddc] hover:text-[#4e6b4e]"
+                    className="inline-flex h-4 w-4 items-center justify-center rounded-full text-[#7f8b97] transition-colors hover:bg-[#e2eddc] hover:text-[#4e6b4e]"
                     aria-label={`Remove ${getCategoryLabel(item)} category`}
                   >
                     <X size={12} />
@@ -316,9 +317,9 @@ export default function Page() {
         ) : null}
       </div>
 
-      <div className="mb-4 border-b border-gray-100 pb-4 last:border-0">
-        <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-700">Price Range</h4>
-        <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">Min Price (₹)</label>
+      <div className="mb-4 border-b border-[#f2e6d8] pb-4 last:border-0">
+        <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-[#3a506b]">Price Range</h4>
+        <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[#8b96a2]">Min Price (₹)</label>
         <input
           type="number"
           min={0}
@@ -329,11 +330,11 @@ export default function Page() {
               minPrice: parseNumberish(event.target.value),
             }));
           }}
-          className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#8fae8e] focus:outline-none"
+          className="mb-3 w-full rounded-xl border border-[#eadfce] px-3 py-2 text-sm text-[#2f3e46] focus:border-[#8fae8e] focus:outline-none"
           placeholder="0"
         />
 
-        <label className="mb-2 block text-xs font-semibold uppercase tracking-wider text-gray-500">Max Price (₹)</label>
+        <label className="mb-1 block text-xs font-semibold uppercase tracking-wider text-[#8b96a2]">Max Price (₹)</label>
         <input
           type="number"
           min={0}
@@ -344,13 +345,13 @@ export default function Page() {
               maxPrice: parseNumberish(event.target.value),
             }));
           }}
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#8fae8e] focus:outline-none"
+          className="w-full rounded-xl border border-[#eadfce] px-3 py-2 text-sm text-[#2f3e46] focus:border-[#8fae8e] focus:outline-none"
           placeholder="10000"
         />
       </div>
 
-      <div className="mb-4 border-b border-gray-100 pb-4 last:border-0">
-        <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-700">Delivery Days</h4>
+      <div className="mb-4 border-b border-[#f2e6d8] pb-4 last:border-0">
+        <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-[#3a506b]">Delivery Days</h4>
         {deliveryDayOptions.map((days) => {
           const checked = draftFilters.deliveryDaysMax === days;
           return (
@@ -366,7 +367,7 @@ export default function Page() {
                   }));
                 }}
               />
-              <span className="cursor-pointer text-sm text-gray-600 group-hover:text-gray-900">
+              <span className="cursor-pointer text-sm text-[#5f7285] group-hover:text-[#1d3557]">
                 {days} day{days > 1 ? 's' : ''}
               </span>
             </label>
@@ -374,8 +375,8 @@ export default function Page() {
         })}
       </div>
 
-      <div className="mb-4 border-b border-gray-100 pb-4 last:border-0">
-        <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-700">Rating</h4>
+      <div className="mb-4 border-b border-[#f2e6d8] pb-4 last:border-0">
+        <h4 className="mb-2 flex items-center gap-2 text-sm font-bold text-[#3a506b]">Rating</h4>
         {ratingOptions.map((rating) => {
           const checked = draftFilters.minRating === rating;
           return (
@@ -391,8 +392,9 @@ export default function Page() {
                   }));
                 }}
               />
-              <span className="cursor-pointer text-sm text-gray-600 group-hover:text-gray-900">
-                {'⭐'.repeat(rating)} {rating} star{rating > 1 ? 's' : ''}{rating < 5 ? ' & up' : ''}
+              <span className="cursor-pointer text-sm text-[#5f7285] group-hover:text-[#1d3557]">
+                <span className="text-yellow-400">{'⭐'.repeat(rating)}</span>{' '}
+                {rating} star{rating > 1 ? 's' : ''}{rating < 5 ? ' & up' : ''}
               </span>
             </label>
           );
@@ -401,7 +403,7 @@ export default function Page() {
 
       <button
         type="button"
-        className="w-full rounded-lg bg-[#8fae8e] py-2.5 font-semibold text-white transition-colors hover:bg-[#7d9d7c]"
+        className="w-full rounded-xl bg-[#8fae8e] py-2.5 font-semibold text-white transition-colors hover:bg-[#7d9d7c]"
         onClick={() => {
           applyFilters(draftFilters);
           setMobileFiltersOpen(false);
@@ -416,7 +418,7 @@ export default function Page() {
           resetAllFilters();
           setMobileFiltersOpen(false);
         }}
-        className="mt-2 w-full cursor-pointer text-center text-sm text-gray-500 transition-colors hover:text-gray-900"
+        className="mt-2 w-full cursor-pointer text-center text-sm text-[#7f8b97] transition-colors hover:text-[#1d3557]"
       >
         Reset All
       </button>
@@ -424,15 +426,22 @@ export default function Page() {
   );
 
   return (
-    <div className="relative min-h-screen bg-[#F2F3EE]">
-      <aside className="fixed bottom-0 left-0 top-16 z-20 hidden w-[280px] border-r border-gray-200 bg-white xl:block">
-        <div className="h-full overflow-y-auto">{renderFilterSidebar()}</div>
+    <div className="relative min-h-screen bg-[#fff8ef]">
+      <div className="pointer-events-none absolute inset-0 opacity-70">
+        <div className="absolute -left-24 top-20 h-64 w-64 rounded-full bg-[#d8e7d1]/45 blur-3xl" />
+        <div className="absolute right-10 top-10 h-56 w-56 rounded-full bg-[#ffd3a8]/50 blur-3xl" />
+      </div>
+
+      <aside className="fixed bottom-0 left-0 top-16 z-20 hidden w-[280px] border-r border-[#eadfce] bg-[#fffdf8] xl:block">
+        <div className="h-full overflow-y-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+          {renderFilterSidebar()}
+        </div>
       </aside>
 
       <div className="relative xl:pl-[280px]">
         <div className="mx-auto w-full max-w-[1400px] px-4 py-6 lg:px-6">
           <main className="space-y-5">
-            <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-col gap-3 rounded-2xl border border-[#eadfce] bg-white/95 px-4 py-3 shadow-[0_8px_24px_rgba(49,78,95,0.08)] lg:flex-row lg:items-center lg:justify-between">
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
@@ -444,14 +453,14 @@ export default function Page() {
                 <button
                   type="button"
                   onClick={() => applyFilters({ ...draftFilters, sortBy: 'rating' })}
-                  className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-[#a9c29f] hover:text-[#4e6b4e]"
+                  className="rounded-xl border border-[#c9d9c3] bg-[#eef5eb] px-4 py-2 text-sm font-medium text-[#4e6b4e] transition-colors hover:border-[#8fae8e] hover:text-[#3f5b3f]"
                 >
                   Top Rated
                 </button>
                 <button
                   type="button"
                   onClick={() => applyFilters({ ...draftFilters, sortBy: 'newest' })}
-                  className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-[#a9c29f] hover:text-[#4e6b4e]"
+                  className="rounded-xl border border-[#d7e4d1] bg-[#eef5eb] px-4 py-2 text-sm font-medium text-[#4e6b4e] transition-colors hover:border-[#9fba95] hover:text-[#3f5b3f]"
                 >
                   Newest
                 </button>
@@ -461,13 +470,14 @@ export default function Page() {
                 <button
                   type="button"
                   onClick={() => setMobileFiltersOpen(true)}
-                  className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 xl:hidden"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#eadfce] bg-white px-4 py-2.5 text-sm font-medium text-[#3a506b] xl:hidden"
                 >
                   <Filter size={16} />
                   Filters
                 </button>
 
-                <div className="flex w-full items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 lg:w-[360px]">
+                <div className="flex w-full items-center gap-2 rounded-xl border border-[#eadfce] bg-white px-3 py-2 lg:w-[360px]">
+                  <Search className="h-4 w-4 flex-shrink-0 text-[#b7c3cd]" />
                   <input
                     type="search"
                     value={draftFilters.search || ''}
@@ -484,22 +494,15 @@ export default function Page() {
                       }
                     }}
                     placeholder="Search gigs by title or keyword"
-                    className="w-full border-none bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                    className="w-full border-none bg-transparent text-sm text-[#2f3e46] placeholder:text-[#9aa6b2] focus:outline-none"
                   />
-                  <button
-                    type="button"
-                    onClick={() => applyFilters(draftFilters)}
-                    className="rounded-lg bg-[#8fae8e] px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-[#7d9d7c]"
-                  >
-                    Search
-                  </button>
                 </div>
               </div>
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="rounded-2xl border border-[#eadfce] bg-white/95 p-4 shadow-[0_8px_24px_rgba(49,78,95,0.08)]">
               <div className="mb-3 flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-gray-700">Categories</p>
+                <p className="text-sm font-semibold text-[#3a506b]">Categories</p>
 
                 <div className="flex items-center gap-3">
                   <select
@@ -509,7 +512,7 @@ export default function Page() {
                       const nextDraft = { ...draftFilters, sortBy: nextSort };
                       applyFilters(nextDraft);
                     }}
-                    className="cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-[#8fae8e] focus:outline-none"
+                    className="cursor-pointer rounded-lg border border-[#eadfce] bg-white px-3 py-1.5 text-sm text-[#3a506b] focus:border-[#8fae8e] focus:outline-none"
                   >
                     {sortOptions.map((option) => (
                       <option key={`${option.value}-${option.label}`} value={option.value}>
@@ -518,14 +521,14 @@ export default function Page() {
                     ))}
                   </select>
 
-                  <div className="flex overflow-hidden rounded-lg border border-gray-200">
+                  <div className="flex overflow-hidden rounded-lg border border-[#eadfce]">
                     <button
                       type="button"
                       onClick={() => setViewMode('grid')}
                       className={
                         viewMode === 'grid'
-                          ? 'bg-gray-900 p-1.5 text-white'
-                          : 'p-1.5 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-900'
+                          ? 'bg-[#8fae8e] p-1.5 text-white'
+                          : 'p-1.5 text-[#9aa6b2] transition-colors hover:bg-[#eef5eb] hover:text-[#5f7a5f]'
                       }
                     >
                       <LayoutGrid size={16} />
@@ -535,8 +538,8 @@ export default function Page() {
                       onClick={() => setViewMode('list')}
                       className={
                         viewMode === 'list'
-                          ? 'bg-gray-900 p-1.5 text-white'
-                          : 'p-1.5 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-900'
+                          ? 'bg-[#8fae8e] p-1.5 text-white'
+                          : 'p-1.5 text-[#9aa6b2] transition-colors hover:bg-[#eef5eb] hover:text-[#5f7a5f]'
                       }
                     >
                       <List size={16} />
@@ -555,7 +558,7 @@ export default function Page() {
                   className={
                     selectedCategories.length === 0
                       ? 'snap-start flex-none whitespace-nowrap rounded-xl border border-[#8fae8e] bg-[#eef5eb] px-3 py-2 text-sm font-semibold text-[#4e6b4e]'
-                      : 'snap-start flex-none whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:border-[#a9c29f] hover:text-[#4e6b4e]'
+                      : 'snap-start flex-none whitespace-nowrap rounded-xl border border-[#eadfce] bg-white px-3 py-2 text-sm font-medium text-[#5f7285] hover:border-[#a9c29f] hover:text-[#4e6b4e]'
                   }
                 >
                   All
@@ -580,7 +583,7 @@ export default function Page() {
                       className={
                         active
                           ? 'snap-start flex-none whitespace-nowrap rounded-xl border border-[#8fae8e] bg-[#eef5eb] px-3 py-2 text-sm font-semibold text-[#4e6b4e]'
-                          : 'snap-start flex-none whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:border-[#a9c29f] hover:text-[#4e6b4e]'
+                          : 'snap-start flex-none whitespace-nowrap rounded-xl border border-[#eadfce] bg-white px-3 py-2 text-sm font-medium text-[#5f7285] hover:border-[#a9c29f] hover:text-[#4e6b4e]'
                       }
                     >
                       {categoryEmoji[item.value] || '💼'} {item.label}
@@ -591,17 +594,17 @@ export default function Page() {
             </div>
 
             {activeChips.length > 0 ? (
-              <div className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
+              <div className="rounded-2xl border border-[#eadfce] bg-white/95 p-3 shadow-[0_8px_24px_rgba(49,78,95,0.08)]">
                 <div className="flex flex-wrap items-center gap-2">
                   {activeChips.map((chip) => (
                     <span
                       key={chip.key}
-                      className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-700"
+                      className="flex items-center gap-1.5 rounded-full border border-[#c9d9c3] bg-[#eef5eb] px-3 py-1 text-xs font-medium text-[#4e6b4e]"
                     >
                       {chip.label}
                       <button
                         type="button"
-                        className="ml-1 cursor-pointer text-gray-400 transition-colors hover:text-gray-900"
+                        className="ml-1 cursor-pointer text-[#7f8b97] transition-colors hover:text-[#1d3557]"
                         onClick={() => removeChip(chip.key)}
                       >
                         <X size={12} />
@@ -620,9 +623,9 @@ export default function Page() {
               </div>
             ) : null}
 
-            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+            <div className="rounded-2xl border border-[#eadfce] bg-white/95 p-4 shadow-[0_8px_24px_rgba(49,78,95,0.08)]">
               <div className="mb-3 flex items-center justify-between">
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-[#5f7285]">
                   Showing {totalCount} gigs
                   {filters.search ? (
                     <>
@@ -638,14 +641,14 @@ export default function Page() {
                   {Array.from({ length: 6 }).map((_, index) => (
                     <div
                       key={`gig-skeleton-${index}`}
-                      className="animate-pulse overflow-hidden rounded-xl border border-gray-200 bg-white"
+                      className="animate-pulse overflow-hidden rounded-xl border border-[#eadfce] bg-white"
                     >
-                      <div className="h-44 bg-gray-100" />
+                      <div className="h-44 bg-[#f6f4ef]" />
                       <div className="p-3">
-                        <div className="mb-2 h-4 w-20 rounded bg-gray-200" />
-                        <div className="mb-2 h-4 w-11/12 rounded bg-gray-200" />
-                        <div className="mb-3 h-4 w-2/3 rounded bg-gray-200" />
-                        <div className="h-4 w-1/2 rounded bg-gray-200" />
+                        <div className="mb-2 h-4 w-20 rounded bg-[#e8e3da]" />
+                        <div className="mb-2 h-4 w-11/12 rounded bg-[#e8e3da]" />
+                        <div className="mb-3 h-4 w-2/3 rounded bg-[#e8e3da]" />
+                        <div className="h-4 w-1/2 rounded bg-[#e8e3da]" />
                       </div>
                     </div>
                   ))}
@@ -655,8 +658,8 @@ export default function Page() {
               {!isLoading && isError ? (
                 <div className="col-span-full py-24 text-center">
                   <p className="text-5xl">⚠️</p>
-                  <h3 className="mt-4 text-xl font-bold text-gray-900">Something went wrong</h3>
-                  <p className="mt-2 text-sm text-gray-500">
+                  <h3 className="mt-4 text-xl font-bold text-[#1d3557]">Something went wrong</h3>
+                  <p className="mt-2 text-sm text-[#5f7285]">
                     {error instanceof Error ? error.message : 'Failed to load gigs. Please try again.'}
                   </p>
                   <button
@@ -674,8 +677,8 @@ export default function Page() {
               {!isLoading && !isError && gigs.length === 0 ? (
                 <div className="col-span-full py-24 text-center">
                   <p className="text-5xl">🔍</p>
-                  <h3 className="mt-4 text-xl font-bold text-gray-900">No gigs found</h3>
-                  <p className="mt-2 text-sm text-gray-500">Try adjusting your filters</p>
+                  <h3 className="mt-4 text-xl font-bold text-[#1d3557]">No gigs found</h3>
+                  <p className="mt-2 text-sm text-[#5f7285]">Try adjusting your filters</p>
                   <button
                     type="button"
                     onClick={resetAllFilters}
@@ -701,13 +704,13 @@ export default function Page() {
               ) : null}
             </div>
 
-            <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+            <div className="rounded-2xl border border-[#eadfce] bg-white px-4 py-3 shadow-[0_8px_24px_rgba(49,78,95,0.08)]">
               <div className="flex items-center justify-center gap-1">
                 <button
                   type="button"
                   disabled={currentPage <= 1}
                   onClick={() => setPage((previous) => Math.max(1, previous - 1))}
-                  className="flex h-9 items-center justify-center rounded-lg border border-gray-200 px-3 text-sm text-gray-600 transition-colors hover:border-[#8fae8e] hover:text-[#5f7a5f] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex h-9 items-center justify-center rounded-lg border border-[#eadfce] px-3 text-sm text-[#5f7285] transition-colors hover:border-[#8fae8e] hover:text-[#5f7a5f] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
@@ -720,7 +723,7 @@ export default function Page() {
                     className={
                       pageNumber === currentPage
                         ? 'h-9 w-9 rounded-lg bg-[#8fae8e] text-sm font-bold text-white'
-                        : 'h-9 w-9 rounded-lg border border-gray-200 text-sm text-gray-600 transition-colors hover:border-[#8fae8e] hover:text-[#5f7a5f]'
+                        : 'h-9 w-9 rounded-lg border border-[#eadfce] text-sm text-[#5f7285] transition-colors hover:border-[#8fae8e] hover:text-[#5f7a5f]'
                     }
                   >
                     {pageNumber}
@@ -731,7 +734,7 @@ export default function Page() {
                   type="button"
                   disabled={currentPage >= totalPages}
                   onClick={() => setPage((previous) => Math.min(totalPages, previous + 1))}
-                  className="flex h-9 items-center justify-center rounded-lg border border-gray-200 px-3 text-sm text-gray-600 transition-colors hover:border-[#8fae8e] hover:text-[#5f7a5f] disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex h-9 items-center justify-center rounded-lg border border-[#eadfce] px-3 text-sm text-[#5f7285] transition-colors hover:border-[#8fae8e] hover:text-[#5f7a5f] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
@@ -743,13 +746,13 @@ export default function Page() {
 
       {mobileFiltersOpen ? (
         <div className="fixed inset-0 z-50 bg-black/40 p-4 lg:hidden">
-          <div className="max-h-[90vh] overflow-y-auto rounded-xl bg-white p-4">
+          <div className="max-h-[90vh] overflow-y-auto rounded-xl bg-[#fffdf8] p-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
             <div className="mb-3 flex items-center justify-between">
-              <h3 className="text-lg font-black text-gray-900">Filters</h3>
+              <h3 className="text-lg font-black text-[#1d3557]">Filters</h3>
               <button
                 type="button"
                 onClick={() => setMobileFiltersOpen(false)}
-                className="rounded-md p-1 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-900"
+                className="rounded-md p-1 text-[#7f8b97] transition-colors hover:bg-[#f4f7f8] hover:text-[#1d3557]"
               >
                 <X size={18} />
               </button>

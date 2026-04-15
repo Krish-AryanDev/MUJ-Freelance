@@ -842,6 +842,7 @@ const buildSearchPipeline = ({
       },
       tagline: 1,
       avatar: 1,
+      coverImage: 1,
       location: 1,
       isAvailable: 1,
       responseTime: 1,

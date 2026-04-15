@@ -28,6 +28,7 @@ const cardFromProfile = (freelancer: any): FreelancerCard => {
     },
     tagline: freelancer.tagline,
     avatar: freelancer.avatar,
+    coverImage: freelancer.coverImage,
     location: freelancer.location,
     isAvailable: Boolean(freelancer.isAvailable),
     responseTime: freelancer.responseTime,
@@ -251,6 +252,7 @@ export default function FreelancersPage() {
                 </button>
 
                 <div className="flex w-full items-center gap-2 rounded-xl border border-[#eadfce] bg-white px-3 py-2 lg:w-[360px]">
+                  <Search className="h-4 w-4 flex-shrink-0 text-[#b7c3cd]" />
                   <input
                     type="search"
                     value={filters.q || ''}
@@ -330,7 +332,7 @@ export default function FreelancersPage() {
               </div>
 
               {searchQuery.isLoading ? (
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
                   {Array.from({ length: 6 }).map((_, index) => (
                     <Skeleton key={index} className="h-72 rounded-xl" />
                   ))}
@@ -362,68 +364,291 @@ export default function FreelancersPage() {
                 <div
                   className={
                     viewMode === 'list'
-                      ? 'grid grid-cols-1 gap-4'
-                      : 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3'
+                      ? 'grid grid-cols-1 gap-3'
+                      : 'grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4'
                   }
                 >
                   {cards.map((card) => (
-                    <article
-                      key={card._id}
-                      className="rounded-2xl border border-[#eadfce] bg-gradient-to-b from-white to-[#fff8f1] p-4 shadow-[0_6px_20px_rgba(49,78,95,0.07)] transition hover:-translate-y-0.5 hover:shadow-[0_10px_26px_rgba(49,78,95,0.12)]"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex items-center gap-3">
-                          <Avatar src={card.avatar || card.user.avatar?.url} alt={card.user.fullName || 'Freelancer'} fallback={card.user.fullName || 'F'} size="lg" className="h-16 w-16 border-2 border-[#b7d5ae]" />
-                          <div>
-                            <h3 className="text-lg font-semibold text-[#1d3557]">{card.user.fullName || card.user.name || 'Freelancer'}</h3>
-                            <p className="line-clamp-2 text-sm text-[#5f7285]">{card.tagline || 'No tagline added yet'}</p>
+                    viewMode === 'list' ? (
+                      <article
+                        key={card._id}
+                        className="group relative overflow-hidden rounded-3xl border border-[#dde1e6] bg-white p-2.5 shadow-[0_8px_24px_rgba(49,78,95,0.10)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_14px_34px_rgba(49,78,95,0.16)]"
+                      >
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-14 overflow-hidden">
+                          {card.coverImage ? (
+                            <div
+                              className="absolute inset-0 bg-cover bg-center"
+                              style={{ backgroundImage: `url(${card.coverImage})` }}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#d7e1ea] to-[#e3e8ee]" />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/92" />
+                        </div>
+
+                        {card.isPremium ? (
+                          <div className="absolute left-2.5 top-2.5">
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 shadow-sm">
+                              ✦ Premium
+                            </span>
+                          </div>
+                        ) : null}
+
+                        <div className="relative z-10 flex flex-col gap-2.5 pt-5 md:flex-row md:items-center md:justify-between">
+                          <div className="flex min-w-0 flex-1 items-start gap-2.5 pt-1.5 md:pt-1">
+                            <Avatar
+                              src={card.avatar || card.user.avatar?.url}
+                              alt={card.user.fullName || 'Freelancer'}
+                              fallback={card.user.fullName || 'F'}
+                              size="lg"
+                              className="h-12 w-12 rounded-full border-4 border-white/80 shadow-md"
+                            />
+
+                            <div className="min-w-0 flex-1">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                  <h3 className="truncate text-base font-bold text-[#1a2e45]">
+                                    {card.user.fullName || card.user.name || 'Freelancer'}
+                                  </h3>
+                                  <p className="mt-0.5 line-clamp-1 text-xs text-[#4a6080]">
+                                    {card.tagline || 'No tagline added yet'}
+                                  </p>
+                                </div>
+
+                                <button
+                                  type="button"
+                                  className="flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-white/60 text-[#3a506b] backdrop-blur-sm transition hover:bg-white/90"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                                    <polyline points="16 6 12 2 8 6" />
+                                    <line x1="12" y1="2" x2="12" y2="15" />
+                                  </svg>
+                                </button>
+                              </div>
+
+                              <div className="mt-2 flex flex-wrap gap-1">
+                                {card.skills.slice(0, 4).map((skill) => (
+                                  <span
+                                    key={`${card._id}-${skill}`}
+                                    className="rounded-full bg-white/60 px-2 py-0.5 text-[11px] font-medium text-[#2d4a6a] backdrop-blur-sm"
+                                  >
+                                    {skill}
+                                  </span>
+                                ))}
+                                {card.skills.length > 4 ? (
+                                  <span className="rounded-full bg-white/60 px-2 py-0.5 text-[11px] font-medium text-[#2d4a6a] backdrop-blur-sm">
+                                    +{card.skills.length - 4}
+                                  </span>
+                                ) : null}
+                              </div>
+
+                              <div className="mt-2.5 grid grid-cols-2 gap-1.5 text-xs text-[#4a6080] sm:grid-cols-4">
+                                <div className="rounded-xl bg-white/55 px-2.5 py-1.5 text-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                                    <span className="text-xs font-bold text-[#1a2e45]">
+                                      {card.averageRating > 0 ? card.averageRating.toFixed(1) : 'N/A'}
+                                    </span>
+                                  </div>
+                                  <p className="mt-1">Rating</p>
+                                </div>
+
+                                <div className="rounded-xl bg-white/55 px-2.5 py-1.5 text-center">
+                                  <p className="text-xs font-bold text-[#1a2e45]">{card.completedProjects > 0 ? `${card.completedProjects}+` : '\u2014'}</p>
+                                  <p className="mt-1">Completed</p>
+                                </div>
+
+                                <div className="rounded-xl bg-white/55 px-2.5 py-1.5 text-center">
+                                  <p className="text-xs font-bold text-[#1a2e45]">{card.hourlyRate ? `$${card.hourlyRate}/hr` : 'N/A'}</p>
+                                  <p className="mt-1">Rate</p>
+                                </div>
+
+                                <div className="rounded-xl bg-white/55 px-2.5 py-1.5 text-center">
+                                  <span className="inline-flex items-center justify-center gap-1.5">
+                                    <span className={`h-2 w-2 rounded-full ${card.isAvailable ? 'bg-green-500' : 'bg-gray-400'}`} />
+                                    <span className={card.isAvailable ? 'font-medium text-green-700' : 'text-gray-500'}>
+                                      {card.isAvailable ? 'Available' : 'Unavailable'}
+                                    </span>
+                                  </span>
+                                  <p className="mt-1">Status</p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-row items-center gap-2 md:w-[180px] md:flex-col md:items-stretch">
+                            <Link href={`/profile/${card.user._id || card.user.id}`} className="flex-1 md:w-full">
+                              <button
+                                type="button"
+                                className="w-full rounded-2xl bg-[#1a2e45] py-2 text-xs font-semibold text-white transition hover:bg-[#243d5a]"
+                              >
+                                Get in touch
+                              </button>
+                            </Link>
+
+                            <Link href="/messages" className="md:w-full">
+                              <button
+                                type="button"
+                                className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/70 text-[#1a2e45] backdrop-blur-sm transition hover:bg-white md:h-9 md:w-full md:gap-2"
+                              >
+                                <MessageCircle className="h-4 w-4" />
+                                <span className="hidden text-xs font-medium md:inline">Message</span>
+                              </button>
+                            </Link>
+
+                            {card.location ? (
+                              <div className="hidden items-center justify-center gap-1 rounded-xl bg-white/55 px-2.5 py-1.5 text-[11px] text-[#4a6080] md:flex">
+                                <MapPin className="h-3 w-3" />
+                                {card.location}
+                              </div>
+                            ) : null}
                           </div>
                         </div>
-                        {card.isPremium ? <span className="rounded-full bg-[#ffe8cf] px-2 py-1 text-xs font-semibold text-[#ba6d27]">Premium</span> : null}
-                      </div>
+                      </article>
+                    ) : (
+                      <article
+                        key={card._id}
+                        className="group relative overflow-hidden rounded-3xl border border-[#dde1e6] bg-white p-3 shadow-[0_8px_32px_rgba(49,78,95,0.10)] transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_16px_40px_rgba(49,78,95,0.18)]"
+                      >
+                        <div className="absolute inset-x-0 top-0 h-20 overflow-hidden rounded-t-3xl bg-[#dbe2e8]">
+                          {card.coverImage ? (
+                            <div
+                              className="absolute inset-0 bg-cover bg-center"
+                              style={{ backgroundImage: `url(${card.coverImage})` }}
+                            />
+                          ) : (
+                            <div className="absolute inset-0 bg-gradient-to-r from-[#d7e1ea] to-[#e3e8ee]" />
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/92" />
+                        </div>
 
-                      <div className="mt-3 flex items-center gap-3 text-sm text-[#5f7285]">
-                        <span className="inline-flex items-center gap-1"><MapPin className="h-3.5 w-3.5" /> {card.location || 'Jaipur'}</span>
-                        <span className="inline-flex items-center gap-1"><Star className="h-3.5 w-3.5 fill-[#8fae8e] text-[#8fae8e]" /> {card.averageRating.toFixed(1)} ({card.totalReviews})</span>
-                      </div>
+                        <div className="absolute right-2.5 top-2.5">
+                          <button
+                            type="button"
+                            className="flex h-6 w-6 items-center justify-center rounded-full bg-white/60 text-[#3a506b] backdrop-blur-sm transition hover:bg-white/90"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+                              <polyline points="16 6 12 2 8 6" />
+                              <line x1="12" y1="2" x2="12" y2="15" />
+                            </svg>
+                          </button>
+                        </div>
 
-                      <div className="mt-3 flex flex-wrap gap-1.5">
-                        {card.skills.slice(0, 4).map((skill) => (
-                          <span key={`${card._id}-${skill}`} className="rounded-full bg-[#eef5eb] px-2.5 py-1 text-xs text-[#4e6b4e]">
-                            {skill}
+                        <div className="relative z-10 mb-2.5 pt-10">
+                          <div className="mb-2">
+                            <Avatar
+                              src={card.avatar || card.user.avatar?.url}
+                              alt={card.user.fullName || 'Freelancer'}
+                              fallback={card.user.fullName || 'F'}
+                              size="lg"
+                              className="h-12 w-12 rounded-full border-4 border-white/80 shadow-md"
+                            />
+                          </div>
+
+                          <div className="flex items-start justify-between pr-8">
+                            <div>
+                              <h3 className="text-base font-bold text-[#1a2e45]">
+                                {card.user.fullName || card.user.name || 'Freelancer'}
+                              </h3>
+                              <p className="mt-0.5 line-clamp-1 text-xs text-[#4a6080]">
+                                {card.tagline || 'No tagline added yet'}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="mt-2 flex flex-wrap gap-1">
+                            {card.skills.slice(0, 3).map((skill) => (
+                              <span
+                                key={`${card._id}-${skill}`}
+                                className="rounded-full bg-white/60 px-2 py-0.5 text-[11px] font-medium text-[#2d4a6a] backdrop-blur-sm"
+                              >
+                                {skill}
+                              </span>
+                            ))}
+                            {card.skills.length > 3 ? (
+                              <span className="rounded-full bg-white/60 px-2 py-0.5 text-[11px] font-medium text-[#2d4a6a] backdrop-blur-sm">
+                                +{card.skills.length - 3}
+                              </span>
+                            ) : null}
+                          </div>
+                        </div>
+
+                        <div className="mb-2 h-px bg-white/40" />
+
+                        <div className="mb-3 grid grid-cols-3 gap-1.5 text-center">
+                          <div>
+                            <div className="flex items-center justify-center gap-1">
+                              <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                              <span className="text-sm font-bold text-[#1a2e45]">
+                                {card.averageRating > 0 ? card.averageRating.toFixed(1) : 'N/A'}
+                              </span>
+                            </div>
+                            <p className="mt-0.5 text-xs text-[#4a6080]">Rating</p>
+                          </div>
+
+                          <div>
+                            <p className="text-sm font-bold text-[#1a2e45]">
+                              {card.completedProjects > 0 ? `${card.completedProjects}+` : '\u2014'}
+                            </p>
+                            <p className="mt-0.5 text-xs text-[#4a6080]">Completed</p>
+                          </div>
+
+                          <div>
+                            <p className="text-sm font-bold text-[#1a2e45]">
+                              {card.hourlyRate ? `$${card.hourlyRate}/hr` : 'N/A'}
+                            </p>
+                            <p className="mt-0.5 text-xs text-[#4a6080]">Rate</p>
+                          </div>
+                        </div>
+
+                        <div className="mb-2.5 flex items-center justify-between text-xs text-[#4a6080]">
+                          <span className="inline-flex items-center gap-1.5">
+                            <span
+                              className={`h-2 w-2 rounded-full ${card.isAvailable ? 'bg-green-500' : 'bg-gray-400'}`}
+                            />
+                            <span className={card.isAvailable ? 'font-medium text-green-700' : 'text-gray-500'}>
+                              {card.isAvailable ? 'Available now' : 'Unavailable'}
+                            </span>
                           </span>
-                        ))}
-                        {card.skills.length > 4 ? <span className="rounded-full bg-[#eef5eb] px-2.5 py-1 text-xs text-[#4e6b4e]">+{card.skills.length - 4}</span> : null}
-                      </div>
-
-                      <div className="mt-4 grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <p className="text-xs text-[#8b96a2]">Completed</p>
-                          <p className="font-semibold text-[#1d3557]">{card.completedProjects}</p>
+                          {card.location ? (
+                            <span className="inline-flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {card.location}
+                            </span>
+                          ) : null}
                         </div>
-                        <div>
-                          <p className="text-xs text-[#8b96a2]">Rate</p>
-                          <p className="font-semibold text-[#1d3557]">{card.hourlyRate ? `INR ${card.hourlyRate}/hr` : 'N/A'}</p>
+
+                        <div className="flex items-center gap-2">
+                          <Link href={`/profile/${card.user._id || card.user.id}`} className="flex-1">
+                            <button
+                              type="button"
+                              className="w-full rounded-2xl bg-[#1a2e45] py-2 text-xs font-semibold text-white transition hover:bg-[#243d5a]"
+                            >
+                              Get in touch
+                            </button>
+                          </Link>
+
+                          <Link href="/messages">
+                            <button
+                              type="button"
+                              className="flex h-9 w-9 items-center justify-center rounded-2xl bg-white/70 text-[#1a2e45] backdrop-blur-sm transition hover:bg-white"
+                            >
+                              <MessageCircle className="h-4 w-4" />
+                            </button>
+                          </Link>
                         </div>
-                      </div>
 
-                      <div className="mt-4 flex items-center justify-between">
-                        <span className="inline-flex items-center gap-1 text-xs text-green-700">
-                          <span className="h-2 w-2 rounded-full bg-green-500" />
-                          {card.isAvailable ? 'Available' : 'Unavailable'}
-                        </span>
-                        <span className="text-xs text-[#8b96a2]">{card.responseTime?.replaceAll('_', ' ') || 'Response time not set'}</span>
-                      </div>
-
-                      <div className="mt-4 flex gap-2">
-                        <Link href={`/profile/${card.user._id || card.user.id}`} className="flex-1">
-                          <Button className="w-full" variant="outline">View Profile</Button>
-                        </Link>
-                        <Link href="/messages" className="flex-1">
-                          <Button className="w-full" leftIcon={<MessageCircle className="h-4 w-4" />}>Message</Button>
-                        </Link>
-                      </div>
-                    </article>
+                        {card.isPremium ? (
+                          <div className="absolute left-2.5 top-2.5">
+                            <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700 shadow-sm">
+                              ✦ Premium
+                            </span>
+                          </div>
+                        ) : null}
+                      </article>
+                    )
                   ))}
                 </div>
               ) : null}

@@ -333,6 +333,7 @@ export interface FreelancerCard {
   user: Pick<User, 'id' | '_id' | 'fullName' | 'name' | 'avatar' | 'email'>;
   tagline?: string;
   avatar?: string;
+  coverImage?: string;
   location?: string;
   isAvailable: boolean;
   responseTime?: FreelancerProfile['responseTime'];
