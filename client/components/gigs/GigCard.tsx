@@ -78,7 +78,7 @@ const getAvatarColorClass = (name: string): string => {
     'bg-blue-500',
     'bg-violet-500',
     'bg-pink-500',
-    'bg-orange-500',
+    'bg-[#8fae8e]',
     'bg-emerald-500',
     'bg-cyan-500',
     'bg-amber-500',
@@ -108,7 +108,7 @@ const CATEGORY_GRADIENTS: Record<string, { gradient: string; emoji: string; labe
     label: 'UI/UX Design',
   },
   GRAPHIC_DESIGN: {
-    gradient: 'from-orange-400 to-orange-500',
+    gradient: 'from-[#9fba95] to-[#8fae8e]',
     emoji: '✏️',
     label: 'Graphic Design',
   },
@@ -204,7 +204,7 @@ const ACCENT_COLORS: Record<string, string> = {
   WEB_DEVELOPMENT: 'bg-blue-500',
   MOBILE_DEVELOPMENT: 'bg-purple-500',
   UI_UX_DESIGN: 'bg-pink-500',
-  GRAPHIC_DESIGN: 'bg-orange-500',
+  GRAPHIC_DESIGN: 'bg-[#8fae8e]',
   CONTENT_WRITING: 'bg-amber-500',
   VIDEO_EDITING: 'bg-red-500',
   PHOTOGRAPHY: 'bg-teal-500',
@@ -227,7 +227,7 @@ const BODY_GRADIENTS: Record<string, string> = {
   WEB_DEVELOPMENT: 'from-white via-white to-blue-50',
   MOBILE_DEVELOPMENT: 'from-white via-white to-violet-50',
   UI_UX_DESIGN: 'from-white via-white to-pink-50',
-  GRAPHIC_DESIGN: 'from-white via-white to-orange-50',
+  GRAPHIC_DESIGN: 'from-white via-white to-[#eef5eb]',
   CONTENT_WRITING: 'from-white via-white to-amber-50',
   VIDEO_EDITING: 'from-white via-white to-red-50',
   PHOTOGRAPHY: 'from-white via-white to-teal-50',
@@ -305,7 +305,7 @@ export default function GigCard({ gig }: GigCardProps) {
         <div className={`animate-card-body-gradient bg-gradient-to-b ${bodyGradient} p-3`}>
           <CardHeader className="mb-1.5">
             <div className="mb-2 flex items-center justify-between gap-2">
-              <Badge className="rounded-full border border-orange-100 bg-orange-50 text-orange-700">
+              <Badge className="rounded-full border border-[#c9d9c3] bg-[#eef5eb] text-[#4e6b4e]">
                 {formatCategory(gig.category || 'OTHER')}
               </Badge>
               <span className="text-xs text-[#64748b]">{totalOrders} orders</span>

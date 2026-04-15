@@ -230,7 +230,7 @@ export default function Page() {
   const renderFilterSidebar = () => (
     <div className="h-full bg-white p-4">
       <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900">
-        <SlidersHorizontal className="h-4 w-4 text-orange-500" />
+        <SlidersHorizontal className="h-4 w-4 text-[#8fae8e]" />
         Filter
       </h3>
 
@@ -239,7 +239,7 @@ export default function Page() {
         <button
           type="button"
           onClick={() => setCategoryDropdownOpen((previous) => !previous)}
-          className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:border-orange-300"
+          className="flex w-full items-center justify-between rounded-lg border border-gray-200 bg-white px-3 py-2 text-left text-sm text-gray-700 transition-colors hover:border-[#a9c29f]"
         >
           <span>
             {selectedCategories.length > 0
@@ -264,7 +264,7 @@ export default function Page() {
                 <label key={item.value} className="group flex cursor-pointer items-center gap-2.5">
                   <input
                     type="checkbox"
-                    className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-orange-500"
+                    className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-[#8fae8e]"
                     checked={checked}
                     onChange={() => {
                       setSelectedCategories((previous) => {
@@ -287,15 +287,15 @@ export default function Page() {
         </div>
 
         {selectedCategories.length > 0 ? (
-          <div className="mt-3 rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-2">
-            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-orange-600">
+          <div className="mt-3 rounded-lg border border-[#c9d9c3] bg-[#eef5eb] px-2.5 py-2">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-[#4e6b4e]">
               Selected Categories
             </p>
             <div className="flex flex-wrap gap-1.5">
               {selectedCategories.map((item) => (
                 <span
                   key={item}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#c9d9c3] bg-white px-2.5 py-1 text-xs font-medium text-gray-700"
                 >
                   {categoryEmoji[item] || '💼'} {getCategoryLabel(item)}
                   <button
@@ -304,7 +304,7 @@ export default function Page() {
                       setSelectedCategories((previous) => previous.filter((value) => value !== item));
                       setPage(1);
                     }}
-                    className="inline-flex h-4 w-4 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-orange-100 hover:text-orange-600"
+                    className="inline-flex h-4 w-4 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-[#e2eddc] hover:text-[#4e6b4e]"
                     aria-label={`Remove ${getCategoryLabel(item)} category`}
                   >
                     <X size={12} />
@@ -329,7 +329,7 @@ export default function Page() {
               minPrice: parseNumberish(event.target.value),
             }));
           }}
-          className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-orange-500 focus:outline-none"
+          className="mb-3 w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#8fae8e] focus:outline-none"
           placeholder="0"
         />
 
@@ -344,7 +344,7 @@ export default function Page() {
               maxPrice: parseNumberish(event.target.value),
             }));
           }}
-          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-orange-500 focus:outline-none"
+          className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm text-gray-900 focus:border-[#8fae8e] focus:outline-none"
           placeholder="10000"
         />
       </div>
@@ -357,7 +357,7 @@ export default function Page() {
             <label key={days} className="group mb-2 flex cursor-pointer items-center gap-2.5">
               <input
                 type="checkbox"
-                className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-orange-500"
+                className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-[#8fae8e]"
                 checked={checked}
                 onChange={() => {
                   setDraftFilters((previous) => ({
@@ -382,7 +382,7 @@ export default function Page() {
             <label key={rating} className="group mb-2 flex cursor-pointer items-center gap-2.5">
               <input
                 type="checkbox"
-                className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-orange-500"
+                className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-[#8fae8e]"
                 checked={checked}
                 onChange={() => {
                   setDraftFilters((previous) => ({
@@ -401,7 +401,7 @@ export default function Page() {
 
       <button
         type="button"
-        className="w-full rounded-lg bg-orange-500 py-2.5 font-semibold text-white transition-colors hover:bg-orange-600"
+        className="w-full rounded-lg bg-[#8fae8e] py-2.5 font-semibold text-white transition-colors hover:bg-[#7d9d7c]"
         onClick={() => {
           applyFilters(draftFilters);
           setMobileFiltersOpen(false);
@@ -437,21 +437,21 @@ export default function Page() {
                 <button
                   type="button"
                   onClick={resetAllFilters}
-                  className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                  className="rounded-xl bg-[#8fae8e] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#7d9d7c]"
                 >
                   All
                 </button>
                 <button
                   type="button"
                   onClick={() => applyFilters({ ...draftFilters, sortBy: 'rating' })}
-                  className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-orange-300 hover:text-orange-600"
+                  className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-[#a9c29f] hover:text-[#4e6b4e]"
                 >
                   Top Rated
                 </button>
                 <button
                   type="button"
                   onClick={() => applyFilters({ ...draftFilters, sortBy: 'newest' })}
-                  className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-orange-300 hover:text-orange-600"
+                  className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-[#a9c29f] hover:text-[#4e6b4e]"
                 >
                   Newest
                 </button>
@@ -489,7 +489,7 @@ export default function Page() {
                   <button
                     type="button"
                     onClick={() => applyFilters(draftFilters)}
-                    className="rounded-lg bg-orange-500 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
+                    className="rounded-lg bg-[#8fae8e] px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-[#7d9d7c]"
                   >
                     Search
                   </button>
@@ -509,7 +509,7 @@ export default function Page() {
                       const nextDraft = { ...draftFilters, sortBy: nextSort };
                       applyFilters(nextDraft);
                     }}
-                    className="cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-orange-500 focus:outline-none"
+                    className="cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-[#8fae8e] focus:outline-none"
                   >
                     {sortOptions.map((option) => (
                       <option key={`${option.value}-${option.label}`} value={option.value}>
@@ -554,8 +554,8 @@ export default function Page() {
                   }}
                   className={
                     selectedCategories.length === 0
-                      ? 'snap-start flex-none whitespace-nowrap rounded-xl border border-orange-500 bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-600'
-                      : 'snap-start flex-none whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:border-orange-300 hover:text-orange-600'
+                      ? 'snap-start flex-none whitespace-nowrap rounded-xl border border-[#8fae8e] bg-[#eef5eb] px-3 py-2 text-sm font-semibold text-[#4e6b4e]'
+                      : 'snap-start flex-none whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:border-[#a9c29f] hover:text-[#4e6b4e]'
                   }
                 >
                   All
@@ -579,8 +579,8 @@ export default function Page() {
                       }}
                       className={
                         active
-                          ? 'snap-start flex-none whitespace-nowrap rounded-xl border border-orange-500 bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-600'
-                          : 'snap-start flex-none whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:border-orange-300 hover:text-orange-600'
+                          ? 'snap-start flex-none whitespace-nowrap rounded-xl border border-[#8fae8e] bg-[#eef5eb] px-3 py-2 text-sm font-semibold text-[#4e6b4e]'
+                          : 'snap-start flex-none whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:border-[#a9c29f] hover:text-[#4e6b4e]'
                       }
                     >
                       {categoryEmoji[item.value] || '💼'} {item.label}
@@ -612,7 +612,7 @@ export default function Page() {
                   <button
                     type="button"
                     onClick={resetAllFilters}
-                    className="ml-auto cursor-pointer text-xs font-semibold text-orange-500 transition-colors hover:text-orange-600"
+                    className="ml-auto cursor-pointer text-xs font-semibold text-[#5f7a5f] transition-colors hover:text-[#4e6b4e]"
                   >
                     Clear All Filters
                   </button>
@@ -627,7 +627,7 @@ export default function Page() {
                   {filters.search ? (
                     <>
                       {' '}
-                      for <span className="font-semibold text-orange-500">&quot;{filters.search}&quot;</span>
+                      for <span className="font-semibold text-[#5f7a5f]">&quot;{filters.search}&quot;</span>
                     </>
                   ) : null}
                 </p>
@@ -664,7 +664,7 @@ export default function Page() {
                     onClick={() => {
                       void refetch();
                     }}
-                    className="mt-6 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-orange-600"
+                    className="mt-6 rounded-xl bg-[#8fae8e] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#7d9d7c]"
                   >
                     Retry
                   </button>
@@ -679,7 +679,7 @@ export default function Page() {
                   <button
                     type="button"
                     onClick={resetAllFilters}
-                    className="mt-6 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-orange-600"
+                    className="mt-6 rounded-xl bg-[#8fae8e] px-6 py-3 font-semibold text-white transition-colors hover:bg-[#7d9d7c]"
                   >
                     Clear Filters
                   </button>
@@ -707,7 +707,7 @@ export default function Page() {
                   type="button"
                   disabled={currentPage <= 1}
                   onClick={() => setPage((previous) => Math.max(1, previous - 1))}
-                  className="flex h-9 items-center justify-center rounded-lg border border-gray-200 px-3 text-sm text-gray-600 transition-colors hover:border-orange-500 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex h-9 items-center justify-center rounded-lg border border-gray-200 px-3 text-sm text-gray-600 transition-colors hover:border-[#8fae8e] hover:text-[#5f7a5f] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
@@ -719,8 +719,8 @@ export default function Page() {
                     onClick={() => setPage(pageNumber)}
                     className={
                       pageNumber === currentPage
-                        ? 'h-9 w-9 rounded-lg bg-orange-500 text-sm font-bold text-white'
-                        : 'h-9 w-9 rounded-lg border border-gray-200 text-sm text-gray-600 transition-colors hover:border-orange-500 hover:text-orange-500'
+                        ? 'h-9 w-9 rounded-lg bg-[#8fae8e] text-sm font-bold text-white'
+                        : 'h-9 w-9 rounded-lg border border-gray-200 text-sm text-gray-600 transition-colors hover:border-[#8fae8e] hover:text-[#5f7a5f]'
                     }
                   >
                     {pageNumber}
@@ -731,7 +731,7 @@ export default function Page() {
                   type="button"
                   disabled={currentPage >= totalPages}
                   onClick={() => setPage((previous) => Math.min(totalPages, previous + 1))}
-                  className="flex h-9 items-center justify-center rounded-lg border border-gray-200 px-3 text-sm text-gray-600 transition-colors hover:border-orange-500 hover:text-orange-500 disabled:cursor-not-allowed disabled:opacity-40"
+                  className="flex h-9 items-center justify-center rounded-lg border border-gray-200 px-3 text-sm text-gray-600 transition-colors hover:border-[#8fae8e] hover:text-[#5f7a5f] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
