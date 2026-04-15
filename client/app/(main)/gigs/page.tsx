@@ -223,7 +223,7 @@ export default function Page() {
   };
 
   const renderFilterSidebar = () => (
-    <div className="rounded-xl border border-gray-200 bg-white p-4">
+    <div className="h-full bg-white p-4">
       <h3 className="mb-4 flex items-center gap-2 text-base font-bold text-gray-900">
         <SlidersHorizontal className="h-4 w-4 text-orange-500" />
         Filter
@@ -231,25 +231,44 @@ export default function Page() {
 
       <div className="mb-4 border-b border-gray-100 pb-4 last:border-0">
         <h4 className="mb-3 flex items-center gap-2 text-sm font-bold text-gray-700">Category</h4>
-        {CATEGORIES.map((item) => {
-          const checked = category === item.value;
-          return (
-            <label key={item.value} className="group mb-2 flex cursor-pointer items-center gap-2.5">
-              <input
-                type="checkbox"
-                className="w-4 h-4 rounded accent-orange-500 cursor-pointer border-gray-300"
-                checked={checked}
-                onChange={() => {
-                  setCategory(checked ? undefined : item.value);
+        <select
+          value={category || ''}
+          onChange={(event) => {
+            const nextCategory = event.target.value as GigCategory | '';
+            setCategory(nextCategory || undefined);
+            setPage(1);
+          }}
+          className="w-full cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:border-orange-500 focus:outline-none"
+        >
+          <option value="">All Categories</option>
+          {CATEGORIES.map((item) => (
+            <option key={item.value} value={item.value}>
+              {item.label}
+            </option>
+          ))}
+        </select>
+
+        {category ? (
+          <div className="mt-3 rounded-lg border border-orange-200 bg-orange-50 px-2.5 py-2">
+            <p className="mb-1 text-[11px] font-semibold uppercase tracking-wide text-orange-600">
+              Selected Category
+            </p>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-orange-200 bg-white px-2.5 py-1 text-xs font-medium text-gray-700">
+              {categoryEmoji[category] || '💼'} {getCategoryLabel(category)}
+              <button
+                type="button"
+                onClick={() => {
+                  setCategory(undefined);
                   setPage(1);
                 }}
-              />
-              <span className="cursor-pointer text-sm text-gray-600 group-hover:text-gray-900">
-                {categoryEmoji[item.value] || '💼'} {item.label}
-              </span>
-            </label>
-          );
-        })}
+                className="inline-flex h-4 w-4 items-center justify-center rounded-full text-gray-400 transition-colors hover:bg-orange-100 hover:text-orange-600"
+                aria-label="Clear selected category"
+              >
+                <X size={12} />
+              </button>
+            </span>
+          </div>
+        ) : null}
       </div>
 
       <div className="mb-4 border-b border-gray-100 pb-4 last:border-0">
@@ -293,7 +312,7 @@ export default function Page() {
             <label key={days} className="group mb-2 flex cursor-pointer items-center gap-2.5">
               <input
                 type="checkbox"
-                className="w-4 h-4 rounded accent-orange-500 cursor-pointer border-gray-300"
+                className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-orange-500"
                 checked={checked}
                 onChange={() => {
                   setDraftFilters((previous) => ({
@@ -318,7 +337,7 @@ export default function Page() {
             <label key={rating} className="group mb-2 flex cursor-pointer items-center gap-2.5">
               <input
                 type="checkbox"
-                className="w-4 h-4 rounded accent-orange-500 cursor-pointer border-gray-300"
+                className="h-4 w-4 cursor-pointer rounded border-gray-300 accent-orange-500"
                 checked={checked}
                 onChange={() => {
                   setDraftFilters((previous) => ({
@@ -360,170 +379,288 @@ export default function Page() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-7xl px-4 py-6">
-        <div className="flex items-start gap-6">
-          <aside className="sticky top-20 hidden w-56 flex-shrink-0 lg:block">
-            {renderFilterSidebar()}
-          </aside>
+    <div className="relative min-h-screen bg-[#F2F3EE]">
+      <aside className="fixed bottom-0 left-0 top-16 z-20 hidden w-[280px] border-r border-gray-200 bg-white xl:block">
+        <div className="h-full overflow-y-auto">{renderFilterSidebar()}</div>
+      </aside>
 
-          <main className="min-w-0 flex-1">
-            <div className="mb-4 lg:hidden">
-              <button
-                type="button"
-                onClick={() => setMobileFiltersOpen(true)}
-                className="flex items-center gap-2 rounded-lg border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-700"
-              >
-                <Filter size={16} />
-                Filters
-              </button>
+      <div className="relative xl:pl-[280px]">
+        <div className="mx-auto w-full max-w-[1400px] px-4 py-6 lg:px-6">
+          <main className="space-y-5">
+            <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-3xl font-bold leading-none text-gray-900">Browse Gigs</h2>
+                <p className="mt-1 text-sm text-gray-500">Discover MUJ freelance services</p>
+              </div>
+              <div className="rounded-full bg-orange-50 px-4 py-1.5 text-xs font-semibold text-orange-600">
+                {totalCount} gigs available
+              </div>
             </div>
 
-            <div className="mb-3 flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3">
-              <p className="text-sm text-gray-600">
-                Showing {totalCount} gigs
-                {filters.search ? (
-                  <>
-                    {' '}
-                    for <span className="font-semibold text-orange-500">&quot;{filters.search}&quot;</span>
-                  </>
-                ) : null}
-              </p>
-
-              <div className="flex items-center gap-3">
-                <select
-                  value={currentSort}
-                  onChange={(event) => {
-                    const nextSort = event.target.value as NonNullable<GigFiltersType['sortBy']>;
-                    const nextDraft = { ...draftFilters, sortBy: nextSort };
-                    applyFilters(nextDraft);
-                  }}
-                  className="cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-orange-500 focus:outline-none"
+            <div className="flex flex-col gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={resetAllFilters}
+                  className="rounded-xl bg-orange-500 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
                 >
-                  {sortOptions.map((option) => (
-                    <option key={`${option.value}-${option.label}`} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                  All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyFilters({ ...draftFilters, sortBy: 'rating' })}
+                  className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-orange-300 hover:text-orange-600"
+                >
+                  Top Rated
+                </button>
+                <button
+                  type="button"
+                  onClick={() => applyFilters({ ...draftFilters, sortBy: 'newest' })}
+                  className="rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:border-orange-300 hover:text-orange-600"
+                >
+                  Newest
+                </button>
+              </div>
 
-                <div className="flex overflow-hidden rounded-lg border border-gray-200">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setMobileFiltersOpen(true)}
+                  className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 xl:hidden"
+                >
+                  <Filter size={16} />
+                  Filters
+                </button>
+
+                <div className="flex w-full items-center gap-2 rounded-xl border border-gray-200 bg-white px-3 py-2 lg:w-[360px]">
+                  <input
+                    type="search"
+                    value={draftFilters.search || ''}
+                    onChange={(event) => {
+                      setDraftFilters((previous) => ({
+                        ...previous,
+                        search: event.target.value,
+                      }));
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === 'Enter') {
+                        event.preventDefault();
+                        applyFilters(draftFilters);
+                      }
+                    }}
+                    placeholder="Search gigs by title or keyword"
+                    className="w-full border-none bg-transparent text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                  />
                   <button
                     type="button"
-                    onClick={() => setViewMode('grid')}
-                    className={
-                      viewMode === 'grid'
-                        ? 'bg-gray-900 p-1.5 text-white'
-                        : 'p-1.5 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-900'
-                    }
+                    onClick={() => applyFilters(draftFilters)}
+                    className="rounded-lg bg-orange-500 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-orange-600"
                   >
-                    <LayoutGrid size={16} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('list')}
-                    className={
-                      viewMode === 'list'
-                        ? 'bg-gray-900 p-1.5 text-white'
-                        : 'p-1.5 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-900'
-                    }
-                  >
-                    <List size={16} />
+                    Search
                   </button>
                 </div>
               </div>
             </div>
 
-            {activeChips.length > 0 ? (
-              <div className="mb-4 flex flex-wrap items-center gap-2">
-                {activeChips.map((chip) => (
-                  <span
-                    key={chip.key}
-                    className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-700"
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <p className="text-sm font-semibold text-gray-700">Categories</p>
+
+                <div className="flex items-center gap-3">
+                  <select
+                    value={currentSort}
+                    onChange={(event) => {
+                      const nextSort = event.target.value as NonNullable<GigFiltersType['sortBy']>;
+                      const nextDraft = { ...draftFilters, sortBy: nextSort };
+                      applyFilters(nextDraft);
+                    }}
+                    className="cursor-pointer rounded-lg border border-gray-200 bg-white px-3 py-1.5 text-sm text-gray-700 focus:border-orange-500 focus:outline-none"
                   >
-                    {chip.label}
+                    {sortOptions.map((option) => (
+                      <option key={`${option.value}-${option.label}`} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+
+                  <div className="flex overflow-hidden rounded-lg border border-gray-200">
                     <button
                       type="button"
-                      className="ml-1 cursor-pointer text-gray-400 transition-colors hover:text-gray-900"
-                      onClick={() => removeChip(chip.key)}
+                      onClick={() => setViewMode('grid')}
+                      className={
+                        viewMode === 'grid'
+                          ? 'bg-gray-900 p-1.5 text-white'
+                          : 'p-1.5 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-900'
+                      }
                     >
-                      <X size={12} />
+                      <LayoutGrid size={16} />
                     </button>
-                  </span>
-                ))}
-
-                <button
-                  type="button"
-                  onClick={resetAllFilters}
-                  className="ml-auto cursor-pointer text-xs font-semibold text-orange-500 transition-colors hover:text-orange-600"
-                >
-                  Clear All Filters
-                </button>
-              </div>
-            ) : null}
-
-            {isLoading ? (
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {Array.from({ length: 8 }).map((_, index) => (
-                  <div
-                    key={`gig-skeleton-${index}`}
-                    className="overflow-hidden rounded-xl border border-gray-200 bg-white animate-pulse"
-                  >
-                    <div className="h-44 bg-gray-100" />
-                    <div className="p-3">
-                      <div className="mb-2 h-4 w-20 rounded bg-gray-200" />
-                      <div className="mb-2 h-4 w-11/12 rounded bg-gray-200" />
-                      <div className="mb-3 h-4 w-2/3 rounded bg-gray-200" />
-                      <div className="h-4 w-1/2 rounded bg-gray-200" />
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('list')}
+                      className={
+                        viewMode === 'list'
+                          ? 'bg-gray-900 p-1.5 text-white'
+                          : 'p-1.5 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-900'
+                      }
+                    >
+                      <List size={16} />
+                    </button>
                   </div>
-                ))}
+                </div>
               </div>
-            ) : null}
 
-            {!isLoading && isError ? (
-              <div className="col-span-full py-24 text-center">
-                <p className="text-5xl">⚠️</p>
-                <h3 className="mt-4 text-xl font-bold text-gray-900">Something went wrong</h3>
-                <p className="mt-2 text-sm text-gray-500">
-                  {error instanceof Error ? error.message : 'Failed to load gigs. Please try again.'}
-                </p>
+              <div className="flex gap-2 overflow-x-auto pb-1">
                 <button
                   type="button"
                   onClick={() => {
-                    void refetch();
+                    setCategory(undefined);
+                    setPage(1);
                   }}
-                  className="mt-6 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-orange-600"
+                  className={
+                    !category
+                      ? 'whitespace-nowrap rounded-xl border border-orange-500 bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-600'
+                      : 'whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:border-orange-300 hover:text-orange-600'
+                  }
                 >
-                  Retry
+                  All
                 </button>
+
+                {CATEGORIES.map((item) => {
+                  const active = category === item.value;
+                  return (
+                    <button
+                      key={item.value}
+                      type="button"
+                      onClick={() => {
+                        setCategory(active ? undefined : item.value);
+                        setPage(1);
+                      }}
+                      className={
+                        active
+                          ? 'whitespace-nowrap rounded-xl border border-orange-500 bg-orange-50 px-3 py-2 text-sm font-semibold text-orange-600'
+                          : 'whitespace-nowrap rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-600 hover:border-orange-300 hover:text-orange-600'
+                      }
+                    >
+                      {categoryEmoji[item.value] || '💼'} {item.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {activeChips.length > 0 ? (
+              <div className="rounded-2xl border border-gray-200 bg-white p-3 shadow-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                  {activeChips.map((chip) => (
+                    <span
+                      key={chip.key}
+                      className="flex items-center gap-1.5 rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-medium text-gray-700"
+                    >
+                      {chip.label}
+                      <button
+                        type="button"
+                        className="ml-1 cursor-pointer text-gray-400 transition-colors hover:text-gray-900"
+                        onClick={() => removeChip(chip.key)}
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
+                  ))}
+
+                  <button
+                    type="button"
+                    onClick={resetAllFilters}
+                    className="ml-auto cursor-pointer text-xs font-semibold text-orange-500 transition-colors hover:text-orange-600"
+                  >
+                    Clear All Filters
+                  </button>
+                </div>
               </div>
             ) : null}
 
-            {!isLoading && !isError && gigs.length === 0 ? (
-              <div className="col-span-full py-24 text-center">
-                <p className="text-5xl">🔍</p>
-                <h3 className="mt-4 text-xl font-bold text-gray-900">No gigs found</h3>
-                <p className="mt-2 text-sm text-gray-500">Try adjusting your filters</p>
-                <button
-                  type="button"
-                  onClick={resetAllFilters}
-                  className="mt-6 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-orange-600"
+            <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm text-gray-600">
+                  Showing {totalCount} gigs
+                  {filters.search ? (
+                    <>
+                      {' '}
+                      for <span className="font-semibold text-orange-500">&quot;{filters.search}&quot;</span>
+                    </>
+                  ) : null}
+                </p>
+              </div>
+
+              {isLoading ? (
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                  {Array.from({ length: 6 }).map((_, index) => (
+                    <div
+                      key={`gig-skeleton-${index}`}
+                      className="animate-pulse overflow-hidden rounded-xl border border-gray-200 bg-white"
+                    >
+                      <div className="h-44 bg-gray-100" />
+                      <div className="p-3">
+                        <div className="mb-2 h-4 w-20 rounded bg-gray-200" />
+                        <div className="mb-2 h-4 w-11/12 rounded bg-gray-200" />
+                        <div className="mb-3 h-4 w-2/3 rounded bg-gray-200" />
+                        <div className="h-4 w-1/2 rounded bg-gray-200" />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : null}
+
+              {!isLoading && isError ? (
+                <div className="col-span-full py-24 text-center">
+                  <p className="text-5xl">⚠️</p>
+                  <h3 className="mt-4 text-xl font-bold text-gray-900">Something went wrong</h3>
+                  <p className="mt-2 text-sm text-gray-500">
+                    {error instanceof Error ? error.message : 'Failed to load gigs. Please try again.'}
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      void refetch();
+                    }}
+                    className="mt-6 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-orange-600"
+                  >
+                    Retry
+                  </button>
+                </div>
+              ) : null}
+
+              {!isLoading && !isError && gigs.length === 0 ? (
+                <div className="col-span-full py-24 text-center">
+                  <p className="text-5xl">🔍</p>
+                  <h3 className="mt-4 text-xl font-bold text-gray-900">No gigs found</h3>
+                  <p className="mt-2 text-sm text-gray-500">Try adjusting your filters</p>
+                  <button
+                    type="button"
+                    onClick={resetAllFilters}
+                    className="mt-6 rounded-xl bg-orange-500 px-6 py-3 font-semibold text-white transition-colors hover:bg-orange-600"
+                  >
+                    Clear Filters
+                  </button>
+                </div>
+              ) : null}
+
+              {!isLoading && !isError && gigs.length > 0 ? (
+                <div
+                  className={
+                    viewMode === 'list'
+                      ? 'grid grid-cols-1 gap-4'
+                      : 'grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3'
+                  }
                 >
-                  Clear Filters
-                </button>
-              </div>
-            ) : null}
+                  {gigs.map((gig) => (
+                    <GigCard key={gig._id || gig.id || gig.slug} gig={gig} />
+                  ))}
+                </div>
+              ) : null}
+            </div>
 
-            {!isLoading && !isError && gigs.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {gigs.map((gig) => (
-                  <GigCard key={gig._id || gig.id || gig.slug} gig={gig} />
-                ))}
-              </div>
-            ) : null}
-
-            <div className="mt-8 flex flex-col items-center">
+            <div className="rounded-2xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
               <div className="flex items-center justify-center gap-1">
                 <button
                   type="button"
