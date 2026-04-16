@@ -29,9 +29,9 @@ const getUserName = (user: AdminOrder['clientId']) => {
   return user.fullName;
 };
 
-const getGigTitle = (gig: AdminOrder['gigId']) => {
+const getOrderTitle = (gig: AdminOrder['gigId']) => {
   if (!gig || typeof gig === 'string') {
-    return 'Gig';
+    return 'Order';
   }
 
   return gig.title;
@@ -54,7 +54,7 @@ export default function OrderTable({ orders }: OrderTableProps) {
           {orders.map((order) => (
             <tr key={order._id} className="hover:bg-zinc-50/70">
               <td className="px-4 py-3">
-                <p className="font-medium text-zinc-900">{getGigTitle(order.gigId)}</p>
+                <p className="font-medium text-zinc-900">{getOrderTitle(order.gigId)}</p>
                 <p className="text-sm text-zinc-500">{order._id}</p>
               </td>
               <td className="px-4 py-3 text-sm text-zinc-700">{getUserName(order.clientId)}</td>

@@ -37,6 +37,7 @@ export const useNotifications = () => {
     queryKey: ['notifications'],
     queryFn: () => notificationService.getNotifications({ page: 1, limit: NOTIFICATION_QUERY_LIMIT }),
     enabled: isAuthenticated,
+    staleTime: 45000,
     retry: (failureCount, error) => {
       if (isServiceUnavailableError(error)) {
         return false;
@@ -49,7 +50,7 @@ export const useNotifications = () => {
         return false;
       }
 
-      return 60000;
+      return 90000;
     },
     refetchOnWindowFocus: false,
   });
@@ -58,6 +59,7 @@ export const useNotifications = () => {
     queryKey: ['notificationUnreadCount'],
     queryFn: notificationService.getUnreadCount,
     enabled: isAuthenticated,
+    staleTime: 10000,
     retry: (failureCount, error) => {
       if (isServiceUnavailableError(error)) {
         return false;
@@ -70,7 +72,7 @@ export const useNotifications = () => {
         return false;
       }
 
-      return 30000;
+      return 45000;
     },
     refetchOnWindowFocus: false,
   });

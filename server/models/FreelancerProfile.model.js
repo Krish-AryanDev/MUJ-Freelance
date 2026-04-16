@@ -478,7 +478,6 @@ freelancerProfileSchema.index({ isAvailable: 1, experienceLevel: 1, hourlyRate: 
 freelancerProfileSchema.index({ averageRating: -1, createdAt: -1 });
 freelancerProfileSchema.index({ isPremium: -1, profileCompletionScore: -1 });
 freelancerProfileSchema.index({ 'settings.profileVisibility': 1 });
-freelancerProfileSchema.index({ profileUrl: 1 });
 
 const FreelancerProfile =
 	mongoose.models.FreelancerProfile || mongoose.model('FreelancerProfile', freelancerProfileSchema);

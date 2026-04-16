@@ -7,13 +7,12 @@
 
 ## Overview
 
-MUJ Freelance is a full-stack freelance marketplace platform for MUJ students. It connects clients and freelancers through gigs and projects, with real-time messaging, orders, payments, reviews, notifications, and role-based dashboards.
+MUJ Freelance is a full-stack freelance marketplace platform for MUJ students. It connects clients and freelancers through projects, with real-time messaging, orders, payments, reviews, notifications, and role-based dashboards.
 
 ## Features
 
 - [x] Authentication with OTP verification and JWT sessions
 - [x] Client and freelancer role-based access control
-- [x] Gigs marketplace with filters and detailed gig pages
 - [x] Project posting and proposal workflows
 - [x] Order lifecycle management (active, delivered, revision, completed)
 - [x] Real-time messaging via Socket.IO
@@ -141,6 +140,7 @@ npm run dev
 | ACCESS_TOKEN_EXPIRY | server | Access token duration |
 | REFRESH_TOKEN_EXPIRY | server | Refresh token duration |
 | CLIENT_URL | server | Frontend origin for CORS/socket |
+| REDIS_URL | server | Redis connection URL for backend caching |
 | CLOUDINARY_CLOUD_NAME | server | Cloudinary cloud name |
 | CLOUDINARY_API_KEY | server | Cloudinary API key |
 | CLOUDINARY_API_SECRET | server | Cloudinary API secret |
@@ -173,14 +173,13 @@ npm run dev
 | --- | --- |
 | Auth | /api/auth/register, /api/auth/login, /api/auth/refresh, /api/auth/logout, /api/auth/me, /api/auth/send-otp, /api/auth/verify-otp |
 | Users | /api/users/me, /api/users/:id |
-| Gigs | /api/gigs, /api/gigs/:id, /api/gigs/me/list |
-| Projects | /api/projects, /api/projects/my, /api/projects/:id, /api/projects/:id/proposals |
+| Projects | /api/projects, /api/projects/categories, /api/projects/my, /api/projects/:id, /api/projects/:id/proposals |
 | Orders | /api/orders, /api/orders/:id, /api/orders/:id/deliver, /api/orders/:id/accept |
 | Messages | /api/messages/conversations, /api/messages/conversations/:id/messages |
 | Reviews | /api/reviews, /api/reviews/me, /api/reviews/user/:userId |
 | Notifications | /api/notifications, /api/notifications/unread-count, /api/notifications/mark-all-read |
 | Payments | /api/payments/create-order, /api/payments/verify, /api/payments/history |
-| Admin | /api/admin/dashboard-stats, /api/admin/users, /api/admin/gigs, /api/admin/orders, /api/admin/analytics |
+| Admin | /api/admin/dashboard-stats, /api/admin/users, /api/admin/orders, /api/admin/analytics |
 
 ## Contributing
 

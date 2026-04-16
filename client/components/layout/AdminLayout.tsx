@@ -16,7 +16,6 @@ interface AdminLayoutProps {
 const adminItems = [
   { label: 'Overview', href: '/admin' },
   { label: 'Users', href: '/admin/users' },
-  { label: 'Gigs', href: '/admin/gigs' },
   { label: 'Orders', href: '/admin/orders' },
   { label: 'Disputes', href: '/admin/disputes' },
   { label: 'Withdrawals', href: '/admin/withdrawals' },

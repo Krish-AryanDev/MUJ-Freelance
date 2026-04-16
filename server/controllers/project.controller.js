@@ -4,9 +4,14 @@ import { getIO } from '../config/socket.js';
 import Project from '../models/Project.model.js';
 import Proposal from '../models/Proposal.model.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
+import { buildCacheKey, deleteCacheByPattern, deleteCacheKey, getCachedJson, setCachedJson } from '../utils/cache.js';
 import { createNotification } from './notification.controller.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
+
+const PROJECT_LIST_TTL_SECONDS = 90;
+const PROJECT_DETAIL_TTL_SECONDS = 120;
+const PROJECT_CATEGORIES_TTL_SECONDS = 1800;
 
 const parsePagination = (query) => {
 	const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
@@ -56,6 +61,14 @@ const mapProjectForResponse = (projectDoc) => {
 
 const getUserDisplayName = (user) => user?.fullName || user?.name || 'A freelancer';
 
+const invalidateProjectCaches = async (projectId = null) => {
+	await Promise.all([
+		deleteCacheByPattern('muj:cache:projects:list:*'),
+		deleteCacheByPattern('muj:cache:projects:categories*'),
+		projectId ? deleteCacheKey(buildCacheKey('projects:detail', { id: String(projectId) })) : Promise.resolve(0),
+	]);
+};
+
 const createProject = asyncHandler(async (req, res) => {
 	const { title, description, category, skillsRequired, budget, deadline, attachments } = req.body;
 
@@ -74,12 +87,21 @@ const createProject = asyncHandler(async (req, res) => {
 
 	const populated = await Project.findById(project._id).populate('client', 'fullName avatar').lean();
 
+	await invalidateProjectCaches(project._id);
+
 	return res
 		.status(201)
 		.json(new ApiResponse(201, { project: mapProjectForResponse(populated) }, 'Project created successfully'));
 });
 
 const getAllProjects = asyncHandler(async (req, res) => {
+	const listCacheKey = buildCacheKey('projects:list', req.query || {});
+	const cachedList = await getCachedJson(listCacheKey);
+
+	if (cachedList) {
+		return res.status(200).json(cachedList);
+	}
+
 	const { page, limit, skip } = parsePagination(req.query);
 	const { category, budgetMin, budgetMax, skills, status, search, sort = 'newest' } = req.query;
 
@@ -138,25 +160,33 @@ const getAllProjects = asyncHandler(async (req, res) => {
 
 	const totalPages = Math.max(Math.ceil(total / limit), 1);
 
-	return res.status(200).json(
-		new ApiResponse(
-			200,
-			{ projects: items.map(mapProjectForResponse) },
-			'Projects fetched successfully',
-			{
-				page,
-				limit,
-				total,
-				totalPages,
-				hasNextPage: page < totalPages,
-				hasPrevPage: page > 1,
-			},
-		),
+	const response = new ApiResponse(
+		200,
+		{ projects: items.map(mapProjectForResponse) },
+		'Projects fetched successfully',
+		{
+			page,
+			limit,
+			total,
+			totalPages,
+			hasNextPage: page < totalPages,
+			hasPrevPage: page > 1,
+		},
 	);
+
+	void setCachedJson(listCacheKey, response, PROJECT_LIST_TTL_SECONDS);
+
+	return res.status(200).json(response);
 });
 
 const getProjectById = asyncHandler(async (req, res) => {
 	const projectId = req.params.id;
+	const detailCacheKey = buildCacheKey('projects:detail', { id: String(projectId || '') });
+	const cachedProject = await getCachedJson(detailCacheKey);
+
+	if (cachedProject) {
+		return res.status(200).json(cachedProject);
+	}
 
 	if (!mongoose.Types.ObjectId.isValid(projectId)) {
 		throw new ApiError(400, 'Invalid project ID');
@@ -171,9 +201,35 @@ const getProjectById = asyncHandler(async (req, res) => {
 	const proposalsCount = await Proposal.countDocuments({ project: project._id });
 	project.proposalCount = proposalsCount;
 
-	return res
-		.status(200)
-		.json(new ApiResponse(200, { project: mapProjectForResponse(project) }, 'Project fetched successfully'));
+	const response = new ApiResponse(200, { project: mapProjectForResponse(project) }, 'Project fetched successfully');
+
+	void setCachedJson(detailCacheKey, response, PROJECT_DETAIL_TTL_SECONDS);
+
+	return res.status(200).json(response);
+});
+
+const getProjectCategories = asyncHandler(async (_req, res) => {
+	const categoriesCacheKey = buildCacheKey('projects:categories');
+	const cachedCategories = await getCachedJson(categoriesCacheKey);
+
+	if (cachedCategories) {
+		return res.status(200).json(cachedCategories);
+	}
+
+	const categories = await Project.distinct('category', {
+		category: { $ne: null },
+	});
+
+	const sortedCategories = categories
+		.map((category) => String(category || '').trim())
+		.filter(Boolean)
+		.sort((a, b) => a.localeCompare(b));
+
+	const response = new ApiResponse(200, { categories: sortedCategories }, 'Project categories fetched successfully');
+
+	void setCachedJson(categoriesCacheKey, response, PROJECT_CATEGORIES_TTL_SECONDS);
+
+	return res.status(200).json(response);
 });
 
 const updateProject = asyncHandler(async (req, res) => {
@@ -222,6 +278,8 @@ const updateProject = asyncHandler(async (req, res) => {
 
 	const updated = await Project.findById(project._id).populate('client', 'fullName avatar').lean();
 
+	await invalidateProjectCaches(project._id);
+
 	return res
 		.status(200)
 		.json(new ApiResponse(200, { project: mapProjectForResponse(updated) }, 'Project updated successfully'));
@@ -251,6 +309,8 @@ const deleteProject = asyncHandler(async (req, res) => {
 	}
 
 	await Project.deleteOne({ _id: project._id });
+
+	await invalidateProjectCaches(projectId);
 
 	return res.status(200).json(new ApiResponse(200, null, 'Project deleted successfully'));
 });
@@ -305,6 +365,8 @@ const submitProposal = asyncHandler(async (req, res) => {
 
 	project.proposalCount = (project.proposalCount || 0) + 1;
 	await project.save();
+
+	await invalidateProjectCaches(project._id);
 
 	const populated = await Proposal.findById(proposal._id).populate('freelancer', 'fullName avatar').lean();
 
@@ -395,6 +457,8 @@ const acceptProposal = asyncHandler(async (req, res) => {
 	project.selectedFreelancer = proposal.freelancer;
 	await project.save();
 
+	await invalidateProjectCaches(project._id);
+
 	const updatedProject = await Project.findById(project._id)
 		.populate('client', 'fullName avatar')
 		.populate('assignedFreelancer', 'fullName avatar')
@@ -453,6 +517,8 @@ const closeProject = asyncHandler(async (req, res) => {
 	project.status = 'cancelled';
 	await project.save();
 
+	await invalidateProjectCaches(project._id);
+
 	return res
 		.status(200)
 		.json(new ApiResponse(200, { project: mapProjectForResponse(project) }, 'Project closed successfully'));
@@ -476,6 +542,7 @@ export {
 	deleteProject,
 	getAllProjects,
 	getClientProjects,
+	getProjectCategories,
 	getFreelancerProposals,
 	getProjectById,
 	getProjectProposals,
@@ -490,6 +557,7 @@ export default {
 	updateProject,
 	deleteProject,
 	getClientProjects,
+	getProjectCategories,
 	submitProposal,
 	getProjectProposals,
 	acceptProposal,

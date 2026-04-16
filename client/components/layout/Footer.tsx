@@ -9,9 +9,6 @@ export default function Footer() {
           <Link href="/search" className="hover:text-zinc-100">
             Find Work
           </Link>
-          <Link href="/gigs" className="hover:text-zinc-100">
-            Browse Gigs
-          </Link>
           <Link href="/projects" className="hover:text-zinc-100">
             Explore Projects
           </Link>

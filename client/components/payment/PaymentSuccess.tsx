@@ -61,8 +61,8 @@ export default function PaymentSuccess({
         <Link href={`/orders/${orderId}`}>
           <Button>View My Order</Button>
         </Link>
-        <Link href="/gigs">
-          <Button variant="outline">Browse More Gigs</Button>
+        <Link href="/freelancers">
+          <Button variant="outline">Browse Freelancers</Button>
         </Link>
       </div>
     </div>

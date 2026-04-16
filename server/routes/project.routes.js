@@ -8,6 +8,7 @@ import {
 	deleteProject,
 	getAllProjects,
 	getClientProjects,
+	getProjectCategories,
 	getFreelancerProposals,
 	getProjectById,
 	getProjectProposals,
@@ -114,6 +115,7 @@ const listValidation = [
 
 router.post('/', requireAuth, requireRole('client'), createProjectValidation, validateRequest, createProject);
 router.get('/', optionalAuth, listValidation, validateRequest, getAllProjects);
+router.get('/categories', optionalAuth, validateRequest, getProjectCategories);
 router.get('/my', requireAuth, requireRole('client'), validateRequest, getClientProjects);
 router.get('/proposals/my', requireAuth, requireRole('freelancer'), validateRequest, getFreelancerProposals);
 router.get('/:id', optionalAuth, projectIdValidation, validateRequest, getProjectById);

@@ -150,9 +150,9 @@ export default function ClientOrdersDashboardPage() {
         <EmptyState
           icon={<ShoppingBag className="mx-auto h-8 w-8" />}
           title="No orders yet"
-          description="Browse gigs and place your first order"
-          actionLabel="Browse Gigs"
-          actionHref="/gigs"
+          description="Browse freelancers and place your first order"
+          actionLabel="Browse Freelancers"
+          actionHref="/freelancers"
         />
       ) : null}
 

@@ -1,6 +1,5 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
 import {
   ArrowRight,
   Bell,
@@ -19,13 +18,10 @@ import {
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 
-import GigCard from '../../components/gigs/GigCard';
 import EmptyState from '../../components/shared/EmptyState';
-import { GIG_CATEGORIES } from '../../constants/categories';
 import { useAuth } from '../../hooks/useAuth';
-import { gigService } from '../../services/gig.service';
 
 const popularSearches = [
   'Web Development',
@@ -36,65 +32,11 @@ const popularSearches = [
   'Mobile App',
 ] as const;
 
-const categoryIconMap: Record<string, string> = {
-  WEB_DEVELOPMENT: '💻',
-  MOBILE_DEVELOPMENT: '📱',
-  APP_DEVELOPMENT: '📱',
-  UI_UX_DESIGN: '🎨',
-  GRAPHIC_DESIGN: '✏️',
-  CONTENT_WRITING: '✍️',
-  VIDEO_EDITING: '🎬',
-  PHOTOGRAPHY: '📷',
-  DIGITAL_MARKETING: '📣',
-  DATA_SCIENCE: '📊',
-  DATA_ANALYTICS: '📊',
-  MACHINE_LEARNING: '🤖',
-  AI_ML: '🤖',
-  CYBERSECURITY: '🔒',
-  CLOUD_COMPUTING: '☁️',
-  DEVOPS: '⚙️',
-  BLOCKCHAIN: '⛓️',
-  GAME_DEVELOPMENT: '🎮',
-  MUSIC_PRODUCTION: '🎵',
-  ANIMATION: '🎭',
-  TUTORING: '📚',
-  TRANSLATION: '🌐',
-  ASSIGNMENT_HELP: '📚',
-  RESUME_PORTFOLIO: '💼',
-  OTHER: '💼',
-};
-
 export default function HomePage() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'client' | 'freelancer'>('client');
-
-  const featuredGigsQuery = useQuery({
-    queryKey: ['featuredGigs'],
-    queryFn: () => gigService.listGigs({ limit: 50 }),
-  });
-
-  const categories = useMemo(() => GIG_CATEGORIES, []);
-  const featuredGigs = (featuredGigsQuery.data?.gigs ?? []).filter(
-    (gig) => gig.status === 'active' || gig.status === 'published'
-  );
-  const featuredGigsByCategory = useMemo(() => {
-    const pickedByCategory = new Map<string, (typeof featuredGigs)[number]>();
-
-    featuredGigs.forEach((gig) => {
-      const category = gig.category || 'OTHER';
-      if (!pickedByCategory.has(category)) {
-        pickedByCategory.set(category, gig);
-      }
-    });
-
-    const orderedUniqueGigs = categories
-      .map((category) => pickedByCategory.get(category.value))
-      .filter((gig): gig is (typeof featuredGigs)[number] => Boolean(gig));
-
-    return orderedUniqueGigs.slice(0, 6);
-  }, [categories, featuredGigs]);
 
   const submitSearch = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -194,10 +136,10 @@ export default function HomePage() {
                 {isAuthenticated ? (
                   <>
                     <Link
-                      href="/gigs"
+                      href="/freelancers"
                       className="inline-flex items-center gap-2 rounded-xl bg-[#0b1220] px-6 py-3 font-semibold text-white transition hover:bg-[#172033]"
                     >
-                      Browse Gigs <ArrowRight className="h-4 w-4" />
+                      Browse Freelancers <ArrowRight className="h-4 w-4" />
                     </Link>
                     <Link
                       href="/projects"
@@ -350,70 +292,13 @@ export default function HomePage() {
       </section>
 
       <section className="bg-[#f7f8fc] px-4 py-16">
-        <div className="mx-auto mb-8 flex max-w-7xl items-center justify-between gap-4">
-          <div>
-            <h2 className="text-3xl font-black text-[#0f172a] sm:text-4xl">Featured Services</h2>
-            <p className="mt-1 text-sm text-[#64748b]">Top picks from MUJ talent</p>
-          </div>
-          <Link href="/gigs" className="inline-flex items-center gap-1 text-sm font-semibold text-[#1d4ed8] hover:underline">
-            View All <ArrowRight className="h-4 w-4" />
-          </Link>
-        </div>
-
-        {featuredGigsQuery.isLoading ? (
-          <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, index) => (
-              <div key={`featured-gig-skeleton-${index}`} className="animate-pulse overflow-hidden rounded-3xl border border-[#dde3ee] bg-white">
-                <div className="h-48 bg-[#e2e8f0]" />
-                <div className="space-y-2 p-4">
-                  <div className="h-4 w-3/4 rounded bg-[#e2e8f0]" />
-                  <div className="h-4 w-1/2 rounded bg-[#e2e8f0]" />
-                  <div className="h-4 w-1/4 rounded bg-[#e2e8f0]" />
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : null}
-
-        {featuredGigsQuery.isError ? (
-          <div className="py-12 text-center text-[#64748b]">Unable to load gigs. Please try again later.</div>
-        ) : null}
-
-        {!featuredGigsQuery.isLoading && !featuredGigsQuery.isError && featuredGigs.length === 0 ? (
-          <div className="mx-auto max-w-7xl">
-            <EmptyState
-              title="No gigs available yet"
-              description="Be the first to create a gig on MUJ Freelance"
-              actionLabel={isAuthenticated ? 'Create a Gig' : undefined}
-              actionHref={isAuthenticated ? '/dashboard/freelancer/gigs/create' : undefined}
-            />
-          </div>
-        ) : null}
-
-        {!featuredGigsQuery.isLoading && !featuredGigsQuery.isError && featuredGigsByCategory.length > 0 ? (
-          <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featuredGigsByCategory.map((gig, index) => (
-              <GigCard key={gig.id || gig.slug || `${gig.title || 'gig'}-${index}`} gig={gig} />
-            ))}
-          </div>
-        ) : null}
-      </section>
-
-      <section className="bg-white px-4 py-14">
         <div className="mx-auto max-w-7xl">
-          <div className="mb-8 flex flex-wrap gap-3">
-            {categories.map((category) => (
-              <button
-                key={category.value}
-                type="button"
-                onClick={() => router.push(`/gigs?category=${encodeURIComponent(category.value)}`)}
-                className="inline-flex items-center gap-2 rounded-full border border-[#d8deeb] bg-[#f8fafc] px-4 py-2 text-xs font-semibold text-[#334155] transition hover:border-[#93c5fd] hover:bg-white hover:text-[#1d4ed8]"
-              >
-                <span>{categoryIconMap[category.value] ?? '💼'}</span>
-                <span>{category.label}</span>
-              </button>
-            ))}
-          </div>
+          <EmptyState
+            title="Discover top MUJ freelancers"
+            description="Explore complete freelancer profiles and connect directly for your requirements."
+            actionLabel="Browse Freelancers"
+            actionHref="/freelancers"
+          />
         </div>
       </section>
 
@@ -454,7 +339,7 @@ export default function HomePage() {
                   <Search className="h-6 w-6" />
                 </div>
                 <h3 className="text-lg font-bold text-[#0f172a]">Post or Browse</h3>
-                <p className="mt-2 text-sm text-[#64748b]">Describe your need or select from ready-to-order gigs.</p>
+                <p className="mt-2 text-sm text-[#64748b]">Describe your need or post a project for campus talent.</p>
               </article>
 
               <article className="rounded-3xl border border-[#d8deeb] bg-white p-6 text-center">
@@ -488,7 +373,7 @@ export default function HomePage() {
                   <Bell className="h-6 w-6" />
                 </div>
                 <h3 className="text-lg font-bold text-[#0f172a]">Get Orders</h3>
-                <p className="mt-2 text-sm text-[#64748b]">Receive project opportunities and respond with clarity.</p>
+                <p className="mt-2 text-sm text-[#64748b]">Receive project opportunities and submit clear proposals.</p>
               </article>
 
               <article className="rounded-3xl border border-[#d8deeb] bg-white p-6 text-center">
@@ -532,10 +417,10 @@ export default function HomePage() {
             ) : (
               <>
                 <Link
-                  href="/gigs"
+                  href="/freelancers"
                   className="rounded-xl bg-white px-7 py-3 font-semibold text-[#0f172a] transition hover:bg-[#e2e8f0]"
                 >
-                  Browse Gigs
+                  Browse Freelancers
                 </Link>
                 <Link
                   href="/projects"

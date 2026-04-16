@@ -3,7 +3,6 @@ import type {
   AnalyticsResponse,
   GetDashboardStatsResponse,
   GetDisputesResponse,
-  GetGigsResponse,
   GetOrdersResponse,
   GetUsersResponse,
   ResolveDisputeResponse,
@@ -35,23 +34,6 @@ export const adminService = {
 
   unbanUser: async (userId: string): Promise<ApiResponse<{ user: unknown }>> => {
     const response = await apiClient.put<ApiResponse<{ user: unknown }>>(`/admin/users/${userId}/unban`);
-    return response.data;
-  },
-
-  getGigs: async (
-    params?: PaginationParams & { search?: string; status?: string; freelancerId?: string },
-  ): Promise<GetGigsResponse> => {
-    const response = await apiClient.get<GetGigsResponse>('/admin/gigs', { params });
-    return response.data;
-  },
-
-  approveGig: async (gigId: string): Promise<ApiResponse<{ gig: unknown }>> => {
-    const response = await apiClient.put<ApiResponse<{ gig: unknown }>>(`/admin/gigs/${gigId}/approve`);
-    return response.data;
-  },
-
-  rejectGig: async (gigId: string): Promise<ApiResponse<{ gig: unknown }>> => {
-    const response = await apiClient.put<ApiResponse<{ gig: unknown }>>(`/admin/gigs/${gigId}/reject`);
     return response.data;
   },
 

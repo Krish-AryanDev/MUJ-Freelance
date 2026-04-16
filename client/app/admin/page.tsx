@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { AlertCircle, FileText, IndianRupee, Package, ShoppingCart, Users } from 'lucide-react';
+import { AlertCircle, FileText, IndianRupee, ShoppingCart, Users } from 'lucide-react';
 
 import RevenueChart from '@/components/admin/RevenueChart';
 import StatsCard from '@/components/admin/StatsCard';
@@ -31,7 +31,6 @@ export default function Page() {
     <div className="space-y-6">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <StatsCard title="Total Users" value={stats.totalUsers} icon={Users} />
-        <StatsCard title="Total Gigs" value={stats.totalGigs} icon={Package} />
         <StatsCard title="Total Orders" value={stats.totalOrders} icon={ShoppingCart} />
         <StatsCard title="Total Projects" value={stats.totalProjects} icon={FileText} />
         <StatsCard title="Open Disputes" value={stats.disputedOrders} icon={AlertCircle} />

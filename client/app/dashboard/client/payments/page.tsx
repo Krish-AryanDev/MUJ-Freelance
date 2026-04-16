@@ -45,7 +45,7 @@ export default function ClientPaymentsDashboardPage() {
     <div className="space-y-5">
       <div>
         <h1 className="text-2xl font-bold text-zinc-900">Payment History</h1>
-        <p className="text-sm text-zinc-600">Track your gig payments and statuses</p>
+        <p className="text-sm text-zinc-600">Track your order payments and statuses</p>
       </div>
 
       {isLoading ? (
@@ -71,8 +71,8 @@ export default function ClientPaymentsDashboardPage() {
           icon={<CreditCard className="mx-auto h-8 w-8" />}
           title="No payments yet"
           description="Your completed checkouts will appear here"
-          actionLabel="Browse Gigs"
-          actionHref="/gigs"
+          actionLabel="Browse Freelancers"
+          actionHref="/freelancers"
         />
       ) : null}
 

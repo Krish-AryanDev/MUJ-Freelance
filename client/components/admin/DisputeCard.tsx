@@ -19,9 +19,9 @@ const getUserName = (user: DisputeOrder['clientId']) => {
   return user.fullName;
 };
 
-const getGigTitle = (gig: DisputeOrder['gigId']) => {
+const getOrderTitle = (gig: DisputeOrder['gigId']) => {
   if (!gig || typeof gig === 'string') {
-    return 'Gig';
+    return 'Order';
   }
 
   return gig.title;
@@ -47,7 +47,7 @@ export default function DisputeCard({ dispute, onResolve }: DisputeCardProps) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-base">{getGigTitle(dispute.gigId)}</CardTitle>
+        <CardTitle className="text-base">{getOrderTitle(dispute.gigId)}</CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
         <p className="text-sm text-zinc-600">Order: {dispute._id}</p>

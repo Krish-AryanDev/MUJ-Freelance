@@ -1,6 +1,5 @@
 import mongoose from 'mongoose';
 
-import Gig from '../models/Gig.model.js';
 import Order from '../models/Order.model.js';
 import Project from '../models/Project.model.js';
 import User from '../models/User.model.js';
@@ -16,14 +15,6 @@ const parsePagination = (query) => {
 	return { page, limit, skip };
 };
 
-const parseObjectId = (value) => {
-	if (!mongoose.Types.ObjectId.isValid(value)) {
-		return null;
-	}
-
-	return new mongoose.Types.ObjectId(value);
-};
-
 const toMonthlySeries = (raw, keyField, valueField = 'total') => {
 	const monthMap = new Map(raw.map((item) => [Number(item[keyField]), Number(item[valueField] || 0)]));
 
@@ -34,9 +25,8 @@ const toMonthlySeries = (raw, keyField, valueField = 'total') => {
 };
 
 const getDashboardStats = asyncHandler(async (_req, res) => {
-	const [users, gigs, orders, projects, disputedOrders, completedRevenue, monthlyRevenueRaw] = await Promise.all([
+	const [users, orders, projects, disputedOrders, completedRevenue, monthlyRevenueRaw] = await Promise.all([
 		User.countDocuments({}),
-		Gig.countDocuments({}),
 		Order.countDocuments({}),
 		Project.countDocuments({}),
 		Order.countDocuments({ status: 'disputed' }),
@@ -63,7 +53,6 @@ const getDashboardStats = asyncHandler(async (_req, res) => {
 			{
 				stats: {
 					totalUsers: users,
-					totalGigs: gigs,
 					totalOrders: orders,
 					totalProjects: projects,
 					disputedOrders,
@@ -171,100 +160,6 @@ const unbanUser = asyncHandler(async (req, res) => {
 	await user.save();
 
 	return res.status(200).json(new ApiResponse(200, { user }, 'User unblocked successfully'));
-});
-
-const getGigs = asyncHandler(async (req, res) => {
-	const { page, limit, skip } = parsePagination(req.query);
-	const { search, status, freelancerId } = req.query;
-
-	const filters = {};
-
-	if (search) {
-		filters.$or = [
-			{ title: { $regex: String(search).trim(), $options: 'i' } },
-			{ description: { $regex: String(search).trim(), $options: 'i' } },
-		];
-	}
-
-	if (status) {
-		filters.status = String(status);
-	}
-
-	if (freelancerId) {
-		const parsedFreelancerId = parseObjectId(String(freelancerId));
-
-		if (!parsedFreelancerId) {
-			throw new ApiError(400, 'Invalid freelancer ID');
-		}
-
-		filters.freelancer = parsedFreelancerId;
-	}
-
-	const [gigs, total] = await Promise.all([
-		Gig.find(filters)
-			.populate('freelancer', 'fullName email avatar accountStatus')
-			.sort({ createdAt: -1 })
-			.skip(skip)
-			.limit(limit)
-			.lean(),
-		Gig.countDocuments(filters),
-	]);
-
-	const totalPages = Math.max(Math.ceil(total / limit), 1);
-
-	return res.status(200).json(
-		new ApiResponse(
-			200,
-			{ gigs },
-			'Gigs fetched successfully',
-			{
-				page,
-				limit,
-				total,
-				totalPages,
-				hasNextPage: page < totalPages,
-				hasPrevPage: page > 1,
-			},
-		),
-	);
-});
-
-const approveGig = asyncHandler(async (req, res) => {
-	const gigId = req.params.id;
-
-	if (!mongoose.Types.ObjectId.isValid(gigId)) {
-		throw new ApiError(400, 'Invalid gig ID');
-	}
-
-	const gig = await Gig.findByIdAndUpdate(gigId, { status: 'active' }, { new: true }).populate(
-		'freelancer',
-		'fullName email avatar accountStatus',
-	);
-
-	if (!gig) {
-		throw new ApiError(404, 'Gig not found');
-	}
-
-	return res.status(200).json(new ApiResponse(200, { gig }, 'Gig approved successfully'));
-});
-
-const rejectGig = asyncHandler(async (req, res) => {
-	const gigId = req.params.id;
-
-	if (!mongoose.Types.ObjectId.isValid(gigId)) {
-		throw new ApiError(400, 'Invalid gig ID');
-	}
-
-	const gig = await Gig.findByIdAndUpdate(gigId, { status: 'inactive' }, { new: true }).populate(
-		'freelancer',
-		'fullName email avatar accountStatus',
-	);
-
-	if (!gig) {
-		throw new ApiError(404, 'Gig not found');
-	}
-
-	return res.status(200).json(new ApiResponse(200, { gig }, 'Gig rejected successfully'));
 });
 
 const getOrders = asyncHandler(async (req, res) => {
@@ -426,9 +321,6 @@ export {
 	getUsers,
 	banUser,
 	unbanUser,
-	getGigs,
-	approveGig,
-	rejectGig,
 	getOrders,
 	getDisputes,
 	resolveDispute,

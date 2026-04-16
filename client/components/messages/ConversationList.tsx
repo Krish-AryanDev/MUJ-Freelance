@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { useAuth } from '@/hooks/useAuth';
+import { useSocket } from '@/hooks/useSocket';
 import { messageService } from '@/services/message.service';
 import { useChatStore } from '@/store/chatStore';
 import type { Conversation, MessageParticipant } from '@/types/message.types';
@@ -26,6 +27,7 @@ const getOtherParticipant = (conversation: Conversation, currentUserId: string):
 
 export default function ConversationList({ activeConversationId, onSelectConversation }: ConversationListProps) {
   const { user } = useAuth();
+  const { isConnected } = useSocket();
   const [search, setSearch] = useState('');
 
   const conversations = useChatStore((state) => state.conversations);
@@ -34,7 +36,8 @@ export default function ConversationList({ activeConversationId, onSelectConvers
   const query = useQuery({
     queryKey: ['messages', 'conversations'],
     queryFn: messageService.getConversations,
-    refetchInterval: 30000,
+    staleTime: 10000,
+    refetchInterval: isConnected ? false : 30000,
   });
 
   useEffect(() => {
@@ -87,7 +90,7 @@ export default function ConversationList({ activeConversationId, onSelectConvers
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search conversations"
         />
-        <EmptyState title="No conversations" description="Start a chat from a profile, gig or order." />
+        <EmptyState title="No conversations" description="Start a chat from a profile, project, or order." />
       </div>
     );
   }

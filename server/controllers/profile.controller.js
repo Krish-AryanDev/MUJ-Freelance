@@ -6,11 +6,14 @@ import { uploadToCloudinary, deleteFromCloudinary } from '../config/cloudinary.j
 import { asyncHandler } from '../middleware/error.middleware.js';
 import FreelancerProfile from '../models/FreelancerProfile.model.js';
 import User from '../models/User.model.js';
+import { buildCacheKey, deleteCacheByPattern, deleteCacheKey, getCachedJson, setCachedJson } from '../utils/cache.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 
 const USER_POPULATE_FIELDS = 'fullName email avatar roles branch semester enrollmentNo';
 const PROFILE_PUBLIC_FIELDS = '-__v';
+const PROFILE_CACHE_TTL_SECONDS = 600;
+const PROFILE_SEARCH_CACHE_TTL_SECONDS = 120;
 
 const toObjectId = (value) => {
   if (!value) {
@@ -173,8 +176,32 @@ const getPopulatedProfileByUserId = async (userId) => {
     .select(PROFILE_PUBLIC_FIELDS);
 };
 
+const invalidateProfileCaches = async ({ userId, profileUrl } = {}) => {
+  const tasks = [deleteCacheByPattern('muj:cache:profiles:search:*')];
+
+  if (userId) {
+    tasks.push(deleteCacheKey(buildCacheKey('profiles:by-user-id', { userId: String(userId) })));
+  }
+
+  if (profileUrl) {
+    tasks.push(deleteCacheKey(buildCacheKey('profiles:by-url', { profileUrl: String(profileUrl) })));
+  }
+
+  await Promise.all(tasks);
+};
+
 const saveAndPopulate = async (profile) => {
   await profile.save();
+
+  await invalidateProfileCaches({
+    userId: normalizeUserId(profile.user),
+    profileUrl: profile.profileUrl,
+  });
+  await invalidateProfileCaches({
+    userId: normalizeUserId(profile.user),
+    profileUrl: profile.profileUrl,
+  });
+
   return getPopulatedProfileByUserId(profile.user);
 };
 
@@ -217,6 +244,16 @@ const getProfileByUserId = asyncHandler(async (req, res) => {
     throw new ApiError(400, 'Invalid user id');
   }
 
+  const isAnonymousRequest = !req.user;
+  const profileByUserCacheKey = buildCacheKey('profiles:by-user-id', { userId: String(userId) });
+
+  if (isAnonymousRequest) {
+    const cachedProfile = await getCachedJson(profileByUserCacheKey);
+    if (cachedProfile) {
+      return res.status(200).json(cachedProfile);
+    }
+  }
+
   const profile = await FreelancerProfile.findOneAndUpdate(
     { user: userId },
     { $inc: { profileViews: 1 } },
@@ -235,7 +272,13 @@ const getProfileByUserId = asyncHandler(async (req, res) => {
 
   const safeProfile = stripSensitiveData(profile, req.user);
 
-  return res.status(200).json(new ApiResponse(200, { profile: safeProfile }, 'Profile fetched successfully'));
+  const response = new ApiResponse(200, { profile: safeProfile }, 'Profile fetched successfully');
+
+  if (isAnonymousRequest && profile?.settings?.profileVisibility === 'public') {
+    void setCachedJson(profileByUserCacheKey, response, PROFILE_CACHE_TTL_SECONDS);
+  }
+
+  return res.status(200).json(response);
 });
 
 const getProfileByUrl = asyncHandler(async (req, res) => {
@@ -243,6 +286,16 @@ const getProfileByUrl = asyncHandler(async (req, res) => {
 
   if (!profileUrl) {
     throw new ApiError(400, 'Profile URL is required');
+  }
+
+  const isAnonymousRequest = !req.user;
+  const profileByUrlCacheKey = buildCacheKey('profiles:by-url', { profileUrl });
+
+  if (isAnonymousRequest) {
+    const cachedProfile = await getCachedJson(profileByUrlCacheKey);
+    if (cachedProfile) {
+      return res.status(200).json(cachedProfile);
+    }
   }
 
   const profile = await FreelancerProfile.findOneAndUpdate(
@@ -263,12 +316,19 @@ const getProfileByUrl = asyncHandler(async (req, res) => {
 
   const safeProfile = stripSensitiveData(profile, req.user);
 
-  return res.status(200).json(new ApiResponse(200, { profile: safeProfile }, 'Profile fetched successfully'));
+  const response = new ApiResponse(200, { profile: safeProfile }, 'Profile fetched successfully');
+
+  if (isAnonymousRequest && profile?.settings?.profileVisibility === 'public') {
+    void setCachedJson(profileByUrlCacheKey, response, PROFILE_CACHE_TTL_SECONDS);
+  }
+
+  return res.status(200).json(response);
 });
 
 const updateBasicInfo = asyncHandler(async (req, res) => {
   const userId = normalizeUserId(req.user);
   const profile = await getOrCreateProfile(userId);
+  const previousProfileUrl = profile.profileUrl;
 
   const {
     tagline,
@@ -324,6 +384,14 @@ const updateBasicInfo = asyncHandler(async (req, res) => {
   }
 
   const populated = await saveAndPopulate(profile);
+
+  if (
+    previousProfileUrl &&
+    profile.profileUrl &&
+    String(previousProfileUrl) !== String(profile.profileUrl)
+  ) {
+    await deleteCacheKey(buildCacheKey('profiles:by-url', { profileUrl: String(previousProfileUrl) }));
+  }
 
   return res.status(200).json(new ApiResponse(200, { profile: populated }, 'Basic info updated'));
 });
@@ -457,6 +525,11 @@ const uploadAvatar = asyncHandler(async (req, res) => {
   );
 
   await profile.save();
+
+  await invalidateProfileCaches({
+    userId: normalizeUserId(profile.user),
+    profileUrl: profile.profileUrl,
+  });
 
   if (oldAvatarPublicId) {
     await deleteFromCloudinary(oldAvatarPublicId).catch(() => null);
@@ -889,6 +962,13 @@ const ensureFreelancerProfiles = async () => {
 };
 
 const searchFreelancers = asyncHandler(async (req, res) => {
+  const searchCacheKey = buildCacheKey('profiles:search', req.query || {});
+  const cachedSearchResult = await getCachedJson(searchCacheKey);
+
+  if (cachedSearchResult) {
+    return res.status(200).json(cachedSearchResult);
+  }
+
   const q = String(req.query.q || '').trim();
   const skills = String(req.query.skills || '')
     .split(',')
@@ -925,18 +1005,20 @@ const searchFreelancers = asyncHandler(async (req, res) => {
   const totalCount = result?.count?.[0]?.totalCount || 0;
   const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
 
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      {
-        freelancers,
-        totalCount,
-        currentPage: page,
-        totalPages,
-      },
-      'Freelancers fetched successfully',
-    ),
+  const response = new ApiResponse(
+    200,
+    {
+      freelancers,
+      totalCount,
+      currentPage: page,
+      totalPages,
+    },
+    'Freelancers fetched successfully',
   );
+
+  void setCachedJson(searchCacheKey, response, PROFILE_SEARCH_CACHE_TTL_SECONDS);
+
+  return res.status(200).json(response);
 });
 
 const getProfileCompletionTips = asyncHandler(async (req, res) => {

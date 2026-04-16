@@ -173,9 +173,9 @@ export default function FreelancerOrdersDashboardPage() {
         <EmptyState
           icon={<Briefcase className="mx-auto h-8 w-8" />}
           title="No orders yet"
-          description="Create gigs to start receiving orders"
-          actionLabel="Create a Gig"
-          actionHref="/dashboard/freelancer/gigs/create"
+          description="Explore projects and start submitting proposals"
+          actionLabel="Browse Projects"
+          actionHref="/projects"
         />
       ) : null}
 

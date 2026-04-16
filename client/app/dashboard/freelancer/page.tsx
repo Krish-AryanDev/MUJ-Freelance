@@ -1,7 +1,7 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
-import { Briefcase, CheckCircle, DollarSign, ShoppingBag } from 'lucide-react';
+import { CheckCircle, DollarSign, ShoppingBag } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useEffect, useMemo } from 'react';
@@ -13,10 +13,8 @@ import ErrorState from '@/components/shared/ErrorState';
 import Badge from '@/components/ui/Badge';
 import Skeleton from '@/components/ui/Skeleton';
 import { useAuth } from '@/hooks/useAuth';
-import { gigService } from '@/services/gig.service';
 import { orderService } from '@/services/order.service';
 import { projectService } from '@/services/project.service';
-import type { Gig } from '@/types/gig.types';
 import type { Order } from '@/types/order.types';
 import type { Proposal } from '@/types/project.types';
 import { classNames, truncateText } from '@/utils/helpers';
@@ -45,30 +43,6 @@ const getOrderStatusVariant = (status: string): 'default' | 'success' | 'warning
 
   if (status === 'cancelled' || status === 'disputed') {
     return 'danger';
-  }
-
-  return 'default';
-};
-
-const getGigStatusLabel = (status: Gig['status']): string => {
-  if (status === 'active' || status === 'published') {
-    return 'Active';
-  }
-
-  if (status === 'paused') {
-    return 'Paused';
-  }
-
-  return 'Inactive';
-};
-
-const getGigStatusVariant = (status: Gig['status']): 'default' | 'success' | 'warning' | 'danger' | 'info' => {
-  if (status === 'active' || status === 'published') {
-    return 'success';
-  }
-
-  if (status === 'paused') {
-    return 'warning';
   }
 
   return 'default';
@@ -106,12 +80,12 @@ const getBuyerAvatar = (client: Order['clientId']): string => {
   return client.avatar?.url || '';
 };
 
-const getGigTitle = (gig: Order['gigId']): string => {
+const getOrderTitle = (gig: Order['gigId']): string => {
   if (typeof gig === 'string') {
-    return 'Gig';
+    return 'Order';
   }
 
-  return gig.title || 'Gig';
+  return gig.title || 'Order';
 };
 
 const getOrderFreelancerId = (freelancer: Order['freelancerId']): string => {
@@ -164,12 +138,6 @@ export default function FreelancerDashboardHomePage() {
     enabled: isAuthenticated,
   });
 
-  const gigsQuery = useQuery({
-    queryKey: ['gigs', 'freelancer-dashboard'],
-    queryFn: () => gigService.listMyGigs({ page: 1, limit: 10 }),
-    enabled: isAuthenticated,
-  });
-
   const proposalsQuery = useQuery({
     queryKey: ['proposals', 'freelancer-dashboard'],
     queryFn: () => projectService.getFreelancerProposals(),
@@ -183,7 +151,6 @@ export default function FreelancerDashboardHomePage() {
     return orders.filter((order) => getOrderFreelancerId(order.freelancerId) === userId);
   }, [ordersQuery.data, user?.id]);
 
-  const gigs = useMemo(() => gigsQuery.data?.gigs ?? [], [gigsQuery.data]);
   const proposals = useMemo(() => proposalsQuery.data ?? [], [proposalsQuery.data]);
 
   const stats = useMemo(() => {
@@ -194,27 +161,23 @@ export default function FreelancerDashboardHomePage() {
       (sum, order) => sum + calculateFreelancerPayout(order.amount),
       0,
     );
-    const activeGigs = gigs.filter((gig) => gig.status === 'active' || gig.status === 'published').length;
+    const activeProposals = proposals.filter(
+      (proposal) => proposal.status === 'pending' || proposal.status === 'shortlisted',
+    ).length;
 
     return {
       activeOrders,
       completedOrders,
       totalEarnings,
-      activeGigs,
+      activeProposals,
     };
-  }, [freelancerOrders, gigs]);
+  }, [freelancerOrders, proposals]);
 
   const recentOrders = useMemo(() => {
     return [...freelancerOrders]
       .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime())
       .slice(0, 5);
   }, [freelancerOrders]);
-
-  const recentGigs = useMemo(() => {
-    return [...gigs]
-      .sort((first, second) => new Date(second.createdAt).getTime() - new Date(first.createdAt).getTime())
-      .slice(0, 3);
-  }, [gigs]);
 
   const recentProposals = useMemo(() => {
     return [...proposals]
@@ -246,16 +209,16 @@ export default function FreelancerDashboardHomePage() {
           </div>
           <div className="flex flex-wrap gap-2">
             <Link
-              href="/dashboard/freelancer/gigs/create"
+              href="/projects"
               className="rounded-md bg-zinc-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-zinc-800"
             >
-              Create a Gig
+              Browse Projects
             </Link>
             <Link
-              href="/projects"
+              href="/dashboard/freelancer/proposals"
               className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
             >
-              Browse Projects
+              View Proposals
             </Link>
           </div>
         </div>
@@ -281,9 +244,9 @@ export default function FreelancerDashboardHomePage() {
           accent="bg-green-50"
         />
         <StatCard
-          title="Active Gigs"
-          value={String(stats.activeGigs)}
-          icon={<Briefcase className="h-5 w-5 text-purple-600" />}
+          title="Active Proposals"
+          value={String(stats.activeProposals)}
+          icon={<CheckCircle className="h-5 w-5 text-purple-600" />}
           accent="bg-purple-50"
         />
       </section>
@@ -321,18 +284,21 @@ export default function FreelancerDashboardHomePage() {
           <EmptyState
             icon={<ShoppingBag className="mx-auto h-8 w-8" />}
             title="No orders yet"
-            description="Create gigs to start receiving orders"
-            actionLabel="Create a Gig"
-            actionHref="/dashboard/freelancer/gigs/create"
+            description="Apply to projects to start receiving orders"
+            actionLabel="Browse Projects"
+            actionHref="/projects"
           />
         ) : null}
 
         {!ordersQuery.isLoading && !ordersQuery.isError && recentOrders.length > 0 ? (
           <div className="overflow-hidden rounded-xl border border-zinc-200">
             {recentOrders.map((order) => (
-              <div key={order._id} className="grid grid-cols-1 gap-3 border-b border-zinc-100 p-4 last:border-b-0 md:grid-cols-6 md:items-center">
+              <div
+                key={order._id}
+                className="grid grid-cols-1 gap-3 border-b border-zinc-100 p-4 last:border-b-0 md:grid-cols-6 md:items-center"
+              >
                 <div className="md:col-span-2">
-                  <p className="text-sm font-medium text-zinc-900">{truncateText(getGigTitle(order.gigId), 55)}</p>
+                  <p className="text-sm font-medium text-zinc-900">{truncateText(getOrderTitle(order.gigId), 55)}</p>
                   <div className="mt-1 flex items-center gap-2 text-xs text-zinc-600">
                     {getBuyerAvatar(order.clientId) ? (
                       <Image
@@ -361,91 +327,6 @@ export default function FreelancerDashboardHomePage() {
                 </Link>
               </div>
             ))}
-          </div>
-        ) : null}
-      </section>
-
-      <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">
-        <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-zinc-900">My Gigs</h2>
-          <Link href="/dashboard/freelancer/gigs" className="text-sm font-medium text-blue-600 hover:text-blue-700">
-            View All
-          </Link>
-        </div>
-
-        {gigsQuery.isLoading ? (
-          <div className="grid gap-3 md:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, index) => (
-              <Skeleton key={`freelancer-gig-card-skeleton-${index}`} className="h-52 rounded-xl" />
-            ))}
-          </div>
-        ) : null}
-
-        {gigsQuery.isError ? (
-          <ErrorState
-            title="Unable to load gigs"
-            message={gigsQuery.error instanceof Error ? gigsQuery.error.message : 'Please try again.'}
-            onRetry={() => {
-              void gigsQuery.refetch();
-            }}
-          />
-        ) : null}
-
-        {!gigsQuery.isLoading && !gigsQuery.isError && recentGigs.length === 0 ? (
-          <EmptyState
-            title="No gigs created yet"
-            description="Create a gig to start receiving orders."
-            actionLabel="Create Your First Gig"
-            actionHref="/dashboard/freelancer/gigs/create"
-          />
-        ) : null}
-
-        {!gigsQuery.isLoading && !gigsQuery.isError && recentGigs.length > 0 ? (
-          <div className="grid gap-3 md:grid-cols-3">
-            {recentGigs.map((gig) => {
-              const startingPrice = gig.packages[0]?.price ?? 0;
-
-              return (
-                <article key={gig.id} className="overflow-hidden rounded-xl border border-zinc-200">
-                  {gig.images[0]?.url ? (
-                    <Image
-                      src={gig.images[0].url}
-                      alt={gig.title}
-                      width={640}
-                      height={288}
-                      unoptimized
-                      className="h-36 w-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex h-36 w-full items-center justify-center bg-zinc-100 text-zinc-400">
-                      <Briefcase className="h-8 w-8" />
-                    </div>
-                  )}
-                  <div className="space-y-2 p-4">
-                    <h3 className="text-sm font-semibold text-zinc-900">{truncateText(gig.title, 50)}</h3>
-                    <Badge variant={getGigStatusVariant(gig.status)}>{getGigStatusLabel(gig.status)}</Badge>
-                    <p className="text-xs text-zinc-600">Starting at {formatPrice(startingPrice)}</p>
-                    <p className="text-xs text-zinc-600">
-                      Rating {gig.averageRating.toFixed(1)} ({gig.totalReviews} reviews)
-                    </p>
-                    <div className="flex gap-2 pt-2">
-                      <Link
-                        href={`/dashboard/freelancer/gigs/edit/${gig.id}`}
-                        className="rounded-md border border-zinc-300 px-3 py-1.5 text-xs font-medium text-zinc-800 transition hover:bg-zinc-100"
-                      >
-                        Edit
-                      </Link>
-                      <Link
-                        href={`/gigs/${gig.id}`}
-                        className="rounded-md bg-zinc-900 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-zinc-800"
-                      >
-                        View
-                      </Link>
-                    </div>
-                  </div>
-                </article>
-              );
-            })}
           </div>
         ) : null}
       </section>
@@ -514,4 +395,3 @@ export default function FreelancerDashboardHomePage() {
     </div>
   );
 }
-

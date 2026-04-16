@@ -57,12 +57,12 @@ const getProjectStatusVariant = (status: string): 'default' | 'success' | 'warni
   return 'default';
 };
 
-const getGigTitle = (gig: Order['gigId']): string => {
+const getOrderTitle = (gig: Order['gigId']): string => {
   if (typeof gig === 'string') {
-    return 'Gig';
+    return 'Order';
   }
 
-  return gig.title || 'Gig';
+  return gig.title || 'Order';
 };
 
 const getSellerName = (freelancer: Order['freelancerId']): string => {
@@ -191,10 +191,10 @@ export default function ClientDashboardHomePage() {
               Post a Project
             </Link>
             <Link
-              href="/gigs"
+              href="/freelancers"
               className="rounded-md border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-800 transition hover:bg-zinc-100"
             >
-              Browse Gigs
+              Browse Freelancers
             </Link>
           </div>
         </div>
@@ -257,9 +257,9 @@ export default function ClientDashboardHomePage() {
           <EmptyState
             icon={<ShoppingBag className="mx-auto h-8 w-8" />}
             title="No orders yet"
-            description="Browse gigs and place your first order"
-            actionLabel="Browse Gigs"
-            actionHref="/gigs"
+            description="Browse freelancers and start your first collaboration"
+            actionLabel="Browse Freelancers"
+            actionHref="/freelancers"
           />
         ) : null}
 
@@ -268,7 +268,7 @@ export default function ClientDashboardHomePage() {
             {recentOrders.map((order) => (
               <div key={order._id} className="grid grid-cols-1 gap-3 border-b border-zinc-100 p-4 last:border-b-0 md:grid-cols-6 md:items-center">
                 <div className="md:col-span-2">
-                  <p className="text-sm font-medium text-zinc-900">{truncateText(getGigTitle(order.gigId), 55)}</p>
+                  <p className="text-sm font-medium text-zinc-900">{truncateText(getOrderTitle(order.gigId), 55)}</p>
                   <div className="mt-1 flex items-center gap-2 text-xs text-zinc-600">
                     {getSellerAvatar(order.freelancerId) ? (
                       <Image

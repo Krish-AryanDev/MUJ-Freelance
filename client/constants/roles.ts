@@ -26,12 +26,12 @@ export const ROLE_OPTIONS: ReadonlyArray<RoleOption> = [
   {
     value: ROLES.FREELANCER,
     label: 'Freelancer',
-    description: 'Create gigs, send proposals, and deliver work.',
+    description: 'Discover projects, send proposals, and deliver work.',
   },
   {
     value: ROLES.ADMIN,
     label: 'Admin',
-    description: 'Moderate users, gigs, orders, and platform disputes.',
+    description: 'Moderate users, orders, projects, and platform disputes.',
   },
 ] as const;
 

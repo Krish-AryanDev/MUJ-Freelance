@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { io, type Socket } from 'socket.io-client';
 
 import { authStore } from '@/store/authStore';
+import { useAuth } from '@/hooks/useAuth';
 import { useChatStore } from '@/store/chatStore';
 import type { Message } from '@/types/message.types';
 
@@ -30,6 +31,7 @@ let subscribers = 0;
 const getSocketUrl = (): string => process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
 
 export const useSocket = () => {
+  const { initialized, isAuthenticated, user, accessToken } = useAuth();
   const activeConversationId = useChatStore((state) => state.activeConversationId);
   const isConnected = useChatStore((state) => state.isConnected);
   const setIsConnected = useChatStore((state) => state.setIsConnected);
@@ -43,13 +45,11 @@ export const useSocket = () => {
   useEffect(() => {
     subscribers += 1;
 
-    const auth = authStore.getState();
-    const isInitialized = Boolean(auth.initialized);
-    const token = auth.accessToken || '';
-    const userId = auth.user?.id || '';
-    const isAuthenticated = Boolean(isInitialized && auth.isAuthenticated && token && userId);
+    const token = accessToken || '';
+    const userId = user?.id || '';
+    const shouldConnect = Boolean(initialized && isAuthenticated && token && userId);
 
-    if (!isAuthenticated) {
+    if (!shouldConnect) {
       if (socketInstance) {
         socketInstance.disconnect();
         socketInstance = null;
@@ -65,10 +65,11 @@ export const useSocket = () => {
     if (!socketInstance) {
       socketInstance = io(getSocketUrl(), {
         withCredentials: true,
-        transports: ['polling'],
-        upgrade: false,
-        auth: {
-          token,
+        transports: ['websocket', 'polling'],
+        upgrade: true,
+        auth: (cb) => {
+          const liveToken = authStore.getState().accessToken || token;
+          cb({ token: liveToken });
         },
       });
 
@@ -82,6 +83,15 @@ export const useSocket = () => {
 
       socketInstance.on('disconnect', () => {
         setIsConnected(false);
+      });
+
+      socketInstance.on('connect_error', (error) => {
+        setIsConnected(false);
+
+        const message = String(error?.message || '').toLowerCase();
+        if (message.includes('unauthorized')) {
+          socketInstance?.disconnect();
+        }
       });
 
       socketInstance.on('new_message', (payload: NewMessageEvent) => {
@@ -140,7 +150,17 @@ export const useSocket = () => {
         subscribers = 0;
       }
     };
-  }, [addMessage, incrementUnreadCount, setIsConnected, setTypingUser, updateConversation]);
+  }, [
+    accessToken,
+    addMessage,
+    incrementUnreadCount,
+    initialized,
+    isAuthenticated,
+    setIsConnected,
+    setTypingUser,
+    updateConversation,
+    user?.id,
+  ]);
 
   useEffect(() => {
     if (!socketInstance || !socketInstance.connected) {

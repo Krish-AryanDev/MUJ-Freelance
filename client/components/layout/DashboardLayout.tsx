@@ -18,7 +18,6 @@ const dashboardItems = {
   ],
   freelancer: [
     { label: 'Overview', href: '/dashboard/freelancer' },
-    { label: 'Gigs', href: '/dashboard/freelancer/gigs' },
     { label: 'Orders', href: '/dashboard/freelancer/orders' },
     { label: 'Proposals', href: '/dashboard/freelancer/proposals' },
     { label: 'Earnings', href: '/dashboard/freelancer/earnings' },

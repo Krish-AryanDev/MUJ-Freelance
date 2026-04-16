@@ -6,6 +6,20 @@ import User from '../models/User.model.js';
 let ioInstance;
 const activeUsers = new Map();
 
+const getAllowedSocketOrigins = () => {
+	const configuredClientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+	return [configuredClientUrl, 'http://localhost:3000', 'http://127.0.0.1:3000'];
+};
+
+const isAllowedSocketOrigin = (origin) => {
+	if (!origin) {
+		return true;
+	}
+
+	const allowedOrigins = getAllowedSocketOrigins();
+	return allowedOrigins.includes(origin);
+};
+
 const toUserRoomId = (userId) => String(userId || '');
 
 const getTokenFromHandshake = (socket) => {
@@ -69,7 +83,13 @@ const initSocket = (httpServer) => {
 
 	ioInstance = new Server(httpServer, {
 		cors: {
-			origin: process.env.CLIENT_URL || 'http://localhost:3000',
+			origin: (origin, callback) => {
+				if (isAllowedSocketOrigin(origin)) {
+					return callback(null, true);
+				}
+
+				return callback(new Error('Socket origin not allowed by CORS'));
+			},
 			credentials: true,
 		},
 	});

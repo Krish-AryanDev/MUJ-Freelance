@@ -11,10 +11,10 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 
 import { connectDBWithRetry, disconnectDB, mongoose } from './config/db.js';
+import { connectRedis, disconnectRedis } from './config/redis.js';
 import { errorHandler, notFoundHandler } from './middleware/error.middleware.js';
 import authRoutes from './routes/auth.routes.js';
 import adminRoutes from './routes/admin.routes.js';
-import gigRoutes from './routes/gig.routes.js';
 import messageRoutes from './routes/message.routes.js';
 import notificationRoutes from './routes/notification.routes.js';
 import orderRoutes from './routes/order.routes.js';
@@ -161,7 +161,6 @@ app.use('/api', async (req, _res, next) => {
 
 app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/gigs', gigRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/orders', orderRoutes);
 app.use('/api/payments', paymentRoutes);
@@ -192,6 +191,8 @@ const startServer = async () => {
 		console.warn(error?.message || error);
 	}
 
+	await connectRedis();
+
 	initSocket(server);
 
 	server.listen(PORT, () => {
@@ -204,6 +205,7 @@ const shutdownServer = async (signal) => {
 
 	server.close(async () => {
 		try {
+			await disconnectRedis();
 			await disconnectDB();
 			console.log('HTTP server closed.');
 			process.exit(0);

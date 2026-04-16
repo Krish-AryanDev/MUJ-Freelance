@@ -4,7 +4,6 @@ import type { User } from './user.types';
 
 export interface DashboardStats {
   totalUsers: number;
-  totalGigs: number;
   totalOrders: number;
   totalProjects: number;
   disputedOrders: number;
@@ -24,22 +23,6 @@ export interface UsersByRolePoint {
 export interface OrdersByStatusPoint {
   status: string;
   count: number;
-}
-
-export interface AdminGig {
-  _id: string;
-  title: string;
-  category: string;
-  status: string;
-  freelancer?: {
-    _id: string;
-    fullName: string;
-    email: string;
-    avatar?: { url?: string };
-    accountStatus?: string;
-  };
-  createdAt: string;
-  updatedAt: string;
 }
 
 export interface AdminOrder extends Order {
@@ -65,10 +48,6 @@ export interface GetUsersPayload {
   users: User[];
 }
 
-export interface GetGigsPayload {
-  gigs: AdminGig[];
-}
-
 export interface GetOrdersPayload {
   orders: AdminOrder[];
 }
@@ -89,7 +68,6 @@ export interface AnalyticsPayload {
 
 export type GetDashboardStatsResponse = ApiResponse<GetDashboardStatsPayload>;
 export type GetUsersResponse = ApiResponse<GetUsersPayload>;
-export type GetGigsResponse = ApiResponse<GetGigsPayload>;
 export type GetOrdersResponse = ApiResponse<GetOrdersPayload>;
 export type GetDisputesResponse = ApiResponse<GetDisputesPayload>;
 export type ResolveDisputeResponse = ApiResponse<ResolveDisputePayload>;

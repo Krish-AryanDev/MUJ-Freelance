@@ -19,6 +19,7 @@ import {
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { useAuth } from '../../hooks/useAuth';
+import { useSocket } from '../../hooks/useSocket';
 import { messageService } from '../../services/message.service';
 import { getProfileCompletionTips } from '../../services/profile.service';
 import Avatar from '../ui/Avatar';
@@ -28,7 +29,6 @@ import { classNames, isServiceUnavailableError } from '../../utils/helpers';
 const discoverNavItems = [
   { label: 'Home', href: '/' },
   { label: 'Freelancers', href: '/freelancers' },
-  { label: 'Gigs', href: '/gigs' },
   { label: 'Projects', href: '/projects' },
 ] as const;
 
@@ -44,6 +44,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const { isConnected } = useSocket();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -60,6 +61,7 @@ export default function Navbar() {
     queryKey: ['messages', 'unread-count', user?.id || ''],
     queryFn: messageService.getUnreadCount,
     enabled: isAuthenticated,
+    staleTime: 15000,
     retry: (failureCount, error) => {
       if (isServiceUnavailableError(error)) {
         return false;
@@ -72,7 +74,7 @@ export default function Navbar() {
         return false;
       }
 
-      return 30000;
+      return isConnected ? 45000 : 25000;
     },
     refetchOnWindowFocus: false,
   });

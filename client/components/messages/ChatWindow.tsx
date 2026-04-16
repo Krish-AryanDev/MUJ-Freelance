@@ -5,6 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useEffect, useMemo, useRef } from 'react';
 
 import { useAuth } from '@/hooks/useAuth';
+import { useSocket } from '@/hooks/useSocket';
 import { messageService } from '@/services/message.service';
 import { useChatStore } from '@/store/chatStore';
 import type { Message } from '@/types/message.types';
@@ -45,6 +46,7 @@ const formatGroupLabel = (dateValue: string): string => {
 
 export default function ChatWindow({ conversationId }: ChatWindowProps) {
   const { user } = useAuth();
+  const { isConnected } = useSocket();
   const conversations = useChatStore((state) => state.conversations);
   const messagesByConversation = useChatStore((state) => state.messages);
   const setMessages = useChatStore((state) => state.setMessages);
@@ -57,7 +59,7 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
   const query = useQuery({
     queryKey: ['messages', 'conversation', conversationId],
     queryFn: () => messageService.getMessages(conversationId, 1, 100),
-    refetchInterval: 10000,
+    refetchInterval: isConnected ? false : 15000,
     enabled: Boolean(conversationId),
   });
 
