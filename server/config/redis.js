@@ -1,17 +1,17 @@
 import Redis from 'ioredis';
 
-const REDIS_URL = process.env.REDIS_URL || '';
-
 let redisClient = null;
 let cacheEnabled = false;
 
 const createRedisClient = () => {
-	if (!REDIS_URL) {
+	const redisUrl = process.env.REDIS_URL || '';
+
+	if (!redisUrl) {
 		console.warn('REDIS_URL is not set. Redis cache is disabled.');
 		return null;
 	}
 
-	return new Redis(REDIS_URL, {
+	return new Redis(redisUrl, {
 		lazyConnect: true,
 		enableReadyCheck: true,
 		maxRetriesPerRequest: 1,
