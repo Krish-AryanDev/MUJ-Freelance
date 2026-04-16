@@ -27,20 +27,20 @@ export default function ProjectCard({ project, className }: ProjectCardProps) {
   return (
     <Card className={className}>
       <Link href={`/projects/${project.id}`} className="block">
-        <CardHeader>
+        <CardHeader className="mb-2 space-y-0.5">
           <div className="mb-2 flex items-center justify-between gap-2">
             <Badge variant="info">{project.category.replaceAll('_', ' ')}</Badge>
             <Badge variant={statusVariant[project.status]}>{project.status}</Badge>
           </div>
-          <CardTitle className="line-clamp-2 text-lg">{project.title}</CardTitle>
+          <CardTitle className="line-clamp-2 text-base">{project.title}</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3">
           <div className="flex items-center gap-2">
             <Avatar src={project.client.avatar?.url} fallback={project.client.fullName} size="sm" />
             <p className="text-sm text-zinc-700">{project.client.fullName}</p>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 text-sm">
+          <div className="grid grid-cols-2 gap-2 text-sm">
             <div>
               <p className="text-xs uppercase tracking-wide text-zinc-500">Budget</p>
               <p className="font-medium text-zinc-900">
@@ -54,10 +54,11 @@ export default function ProjectCard({ project, className }: ProjectCardProps) {
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2">
-            {project.skillsRequired.slice(0, 6).map((skill) => (
+          <div className="flex flex-wrap gap-1.5">
+            {project.skillsRequired.slice(0, 3).map((skill) => (
               <Badge key={skill}>{skill}</Badge>
             ))}
+            {project.skillsRequired.length > 3 ? <Badge>+{project.skillsRequired.length - 3}</Badge> : null}
           </div>
 
           <div className="flex items-center justify-between text-xs text-zinc-500">
