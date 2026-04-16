@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "nodemon index.js",
     "start": "node index.js",
-    "seed:mock-users": "node scripts/seedMockUsers.js"
+    "seed:mock-users": "node scripts/seedMockUsers.js",
+    "seed:mock-projects": "node scripts/seedMockProjects.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
