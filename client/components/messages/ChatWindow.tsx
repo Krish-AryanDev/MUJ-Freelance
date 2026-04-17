@@ -143,8 +143,8 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
   }
 
   return (
-    <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between border-b border-zinc-200 px-4 py-3">
+    <div className="flex h-full flex-col bg-[#fffdf8]">
+      <div className="flex items-center justify-between border-b border-[#eadfce] bg-white px-4 py-3">
         <div className="flex items-center gap-3">
           <Avatar
             src={otherParticipant?.avatar?.url}
@@ -153,21 +153,21 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
             size="md"
           />
           <div>
-            <p className="text-sm font-semibold text-zinc-900">{otherParticipant?.fullName || 'Conversation'}</p>
-            <p className="text-xs text-zinc-500">{otherParticipant?.email || 'MUJ Freelance chat'}</p>
+            <p className="text-sm font-semibold text-[#1a2e45]">{otherParticipant?.fullName || 'Conversation'}</p>
+            <p className="text-xs text-[#5f7285]">{otherParticipant?.email || 'MUJ Freelance chat'}</p>
           </div>
         </div>
 
-        <p className="text-xs text-zinc-500">{markAsReadQuery.isFetching ? 'Syncing...' : 'Synced'}</p>
+        <p className="text-xs text-[#8b96a2]">{markAsReadQuery.isFetching ? 'Syncing...' : 'Synced'}</p>
       </div>
 
-      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4">
+      <div className="flex-1 space-y-4 overflow-y-auto px-4 py-4 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         {groupedMessages.length === 0 ? (
           <EmptyState title="No messages yet" description="Start the conversation with your first message." />
         ) : (
           groupedMessages.map((group) => (
             <div key={group.label} className="space-y-3">
-              <div className="text-center text-xs font-medium text-zinc-500">{group.label}</div>
+              <div className="text-center text-xs font-medium text-[#8b96a2]">{group.label}</div>
               {group.messages.map((message, index) => {
                 const previous = group.messages[index - 1];
                 const isOwn = senderId(message.sender) === String(user?.id || '');
@@ -180,13 +180,13 @@ export default function ChatWindow({ conversationId }: ChatWindowProps) {
         )}
 
         {typingUsers.filter((typingUserId) => typingUserId !== String(user?.id || '')).length > 0 ? (
-          <p className="text-xs italic text-zinc-500">Someone is typing...</p>
+          <p className="text-xs italic text-[#5f7285]">Someone is typing...</p>
         ) : null}
 
         <div ref={endRef} />
       </div>
 
-      <div className="border-t border-zinc-200 px-4 py-3">
+      <div className="border-t border-[#eadfce] bg-[#fffdf8] px-4 py-3">
         <MessageInput
           conversationId={conversationId}
           onMessageSent={(message) => {

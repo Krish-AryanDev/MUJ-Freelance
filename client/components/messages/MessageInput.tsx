@@ -107,9 +107,9 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
   };
 
   return (
-    <div className="space-y-2 border-t border-zinc-200 pt-3">
+    <div className="space-y-2 border-t border-[#eadfce] bg-[#fffdf8] px-1 pt-3">
       {file ? (
-        <div className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs text-zinc-700">
+        <div className="rounded-md border border-[#eadfce] bg-white px-3 py-2 text-xs text-[#3a506b]">
           Selected file: {file.name}
         </div>
       ) : null}
@@ -118,7 +118,7 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-zinc-300 text-zinc-600 hover:bg-zinc-100"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#eadfce] bg-white text-[#5f7285] transition-colors hover:bg-[#eef5eb] hover:text-[#4e6b4e]"
           aria-label="Attach file"
         >
           <Paperclip className="h-4 w-4" />
@@ -126,7 +126,7 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
 
         <button
           type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md border border-zinc-300 text-zinc-600 hover:bg-zinc-100"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-[#eadfce] bg-white text-[#5f7285] transition-colors hover:bg-[#eef5eb] hover:text-[#4e6b4e]"
           aria-label="Emoji picker placeholder"
         >
           <Smile className="h-4 w-4" />
@@ -144,16 +144,16 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
           }}
           placeholder="Type a message..."
           rows={1}
-          className="min-h-10 max-h-56 flex-1 resize-none rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none ring-black/20 transition focus:ring-2"
+          className="min-h-10 max-h-56 flex-1 resize-none rounded-md border border-[#eadfce] px-3 py-2 text-sm text-[#2f3e46] outline-none transition placeholder:text-[#9aa6b2] focus:border-[#8fae8e] focus:ring-2 focus:ring-[#8fae8e]/30"
         />
 
-        <Button type="button" onClick={handleSubmit} isLoading={sendMutation.isPending} disabled={!canSend}>
+        <Button type="button" onClick={handleSubmit} isLoading={sendMutation.isPending} disabled={!canSend} className="h-10 w-10 rounded-lg bg-[#8fae8e] p-0 text-white hover:bg-[#7d9d7c]">
           <Send className="h-4 w-4" />
         </Button>
       </div>
 
       {content.length > 500 ? (
-        <p className="text-right text-xs text-zinc-500">{content.length} characters</p>
+        <p className="text-right text-xs text-[#8b96a2]">{content.length} characters</p>
       ) : null}
 
       <input

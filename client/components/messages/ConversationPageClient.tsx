@@ -1,10 +1,11 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Plus } from 'lucide-react';
 
 import ChatWindow from './ChatWindow';
 import ConversationList from './ConversationList';
+import MessageDetailsPanel from './MessageDetailsPanel';
 
 interface ConversationPageClientProps {
   conversationId: string;
@@ -12,27 +13,43 @@ interface ConversationPageClientProps {
 
 export default function ConversationPageClient({ conversationId }: ConversationPageClientProps) {
   return (
-    <div className="mx-auto grid h-[calc(100vh-9rem)] w-full max-w-7xl grid-cols-1 gap-4 px-4 py-6 md:grid-cols-[320px_1fr] sm:px-6 lg:px-8">
-      <section className="hidden rounded-xl border border-zinc-200 bg-white p-3 md:block">
-        <ConversationList
-          activeConversationId={conversationId}
-          onSelectConversation={(id) => {
-            if (id !== conversationId) {
-              window.location.href = `/messages/${id}`;
-            }
-          }}
-        />
-      </section>
+    <div className="h-[calc(100vh-4rem)] w-full bg-[#fff8ef]">
+      <div className="grid h-full w-full lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[320px_minmax(0,1fr)_300px]">
+        <section className="hidden border-r border-[#eadfce] bg-[#fffdf8] p-4 lg:block">
+          <button
+            type="button"
+            className="mb-3 inline-flex items-center gap-2 rounded-lg border border-[#eadfce] bg-white px-3 py-2 text-sm font-semibold text-[#3a506b] transition-colors hover:border-[#a9c29f] hover:text-[#5f7a5f]"
+          >
+            <Plus className="h-4 w-4" />
+            New conversation
+          </button>
 
-      <section className="rounded-xl border border-zinc-200 bg-white">
-        <div className="border-b border-zinc-200 px-4 py-3 md:hidden">
-          <Link href="/messages" className="inline-flex items-center gap-2 text-sm font-medium text-zinc-700">
-            <ArrowLeft className="h-4 w-4" />
-            Back to conversations
-          </Link>
-        </div>
-        <ChatWindow conversationId={conversationId} />
-      </section>
+          <h2 className="mb-2 text-3xl font-black tracking-tight text-[#1d3557]">Chats</h2>
+
+          <ConversationList
+            activeConversationId={conversationId}
+            onSelectConversation={(id) => {
+              if (id !== conversationId) {
+                window.location.href = `/messages/${id}`;
+              }
+            }}
+          />
+        </section>
+
+        <section className="min-h-0 bg-[#fffdf8] xl:border-r xl:border-[#eadfce]">
+          <div className="h-full bg-[#fffdf8]">
+            <div className="border-b border-[#eadfce] bg-white px-4 py-3 lg:hidden">
+              <Link href="/messages" className="inline-flex items-center gap-2 text-sm font-medium text-[#3a506b]">
+                <ArrowLeft className="h-4 w-4" />
+                Back to conversations
+              </Link>
+            </div>
+            <ChatWindow conversationId={conversationId} />
+          </div>
+        </section>
+
+        <MessageDetailsPanel conversationId={conversationId} />
+      </div>
     </div>
   );
 }

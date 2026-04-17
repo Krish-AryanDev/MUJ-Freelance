@@ -11,24 +11,37 @@ const getAllowedSocketOrigins = () => {
 	return [configuredClientUrl, 'http://localhost:3000', 'http://127.0.0.1:3000'];
 };
 
+const isLocalDevOrigin = (origin) => {
+	try {
+		const parsed = new URL(origin);
+		return parsed.protocol === 'http:' && (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1');
+	} catch (_error) {
+		return false;
+	}
+};
+
 const isAllowedSocketOrigin = (origin) => {
 	if (!origin) {
 		return true;
 	}
 
 	const allowedOrigins = getAllowedSocketOrigins();
-	return allowedOrigins.includes(origin);
+	return allowedOrigins.includes(origin) || isLocalDevOrigin(origin);
 };
 
 const toUserRoomId = (userId) => String(userId || '');
 
 const getTokenFromHandshake = (socket) => {
 	const authToken = socket?.handshake?.auth?.token;
-	if (!authToken || typeof authToken !== 'string') {
+	const headerToken = socket?.handshake?.headers?.authorization;
+	const queryToken = socket?.handshake?.query?.token;
+	const candidate = authToken || headerToken || queryToken;
+
+	if (!candidate || typeof candidate !== 'string') {
 		return '';
 	}
 
-	return authToken.startsWith('Bearer ') ? authToken.slice(7).trim() : authToken.trim();
+	return candidate.startsWith('Bearer ') ? candidate.slice(7).trim() : candidate.trim();
 };
 
 const registerUserSocket = (userId, socketId) => {
@@ -82,6 +95,7 @@ const initSocket = (httpServer) => {
 	}
 
 	ioInstance = new Server(httpServer, {
+		transports: ['polling', 'websocket'],
 		cors: {
 			origin: (origin, callback) => {
 				if (isAllowedSocketOrigin(origin)) {
@@ -102,7 +116,7 @@ const initSocket = (httpServer) => {
 			}
 
 			const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-			const userId = decoded?._id;
+			const userId = decoded?.userId || decoded?.id || decoded?._id;
 			if (!userId) {
 				return next(new Error('Unauthorized: Invalid token payload'));
 			}

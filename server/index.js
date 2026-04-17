@@ -40,6 +40,23 @@ const NODE_ENV = process.env.NODE_ENV || 'development';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 const ALLOW_SERVER_WITHOUT_DB = process.env.ALLOW_SERVER_WITHOUT_DB === 'true';
 
+const isAllowedHttpOrigin = (origin) => {
+	if (!origin) {
+		return true;
+	}
+
+	if (origin === CLIENT_URL || origin === 'http://localhost:3000' || origin === 'http://127.0.0.1:3000') {
+		return true;
+	}
+
+	try {
+		const parsed = new URL(origin);
+		return parsed.protocol === 'http:' && (parsed.hostname === 'localhost' || parsed.hostname === '127.0.0.1');
+	} catch (_error) {
+		return false;
+	}
+};
+
 const DB_STATE_MAP = {
 	0: 'disconnected',
 	1: 'connected',
@@ -93,7 +110,13 @@ app.set('trust proxy', 1);
 
 app.use(
 	cors({
-		origin: CLIENT_URL,
+		origin: (origin, callback) => {
+			if (isAllowedHttpOrigin(origin)) {
+				return callback(null, true);
+			}
+
+			return callback(new Error('HTTP origin not allowed by CORS'));
+		},
 		credentials: true,
 	}),
 );

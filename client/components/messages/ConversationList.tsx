@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Search } from 'lucide-react';
 
 import { useAuth } from '@/hooks/useAuth';
 import { useSocket } from '@/hooks/useSocket';
@@ -11,7 +12,6 @@ import type { Conversation, MessageParticipant } from '@/types/message.types';
 import { formatDate } from '@/utils/formatDate';
 import { truncateText } from '@/utils/helpers';
 import Avatar from '../ui/Avatar';
-import Input from '../ui/Input';
 import Skeleton from '../ui/Skeleton';
 import EmptyState from '../shared/EmptyState';
 import ErrorState from '../shared/ErrorState';
@@ -61,9 +61,9 @@ export default function ConversationList({ activeConversationId, onSelectConvers
   if (query.isLoading) {
     return (
       <div className="space-y-3">
-        <Skeleton className="h-10 rounded-md" />
+        <Skeleton className="h-10 rounded-xl" />
         {Array.from({ length: 6 }).map((_, index) => (
-          <Skeleton key={`conversation-skeleton-${index}`} className="h-16 rounded-lg" />
+          <Skeleton key={`conversation-skeleton-${index}`} className="h-16 rounded-xl" />
         ))}
       </div>
     );
@@ -84,12 +84,16 @@ export default function ConversationList({ activeConversationId, onSelectConvers
   if (filteredConversations.length === 0) {
     return (
       <div className="space-y-3">
-        <Input
-          id="message-conversation-search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search conversations"
-        />
+        <div className="flex items-center gap-2 rounded-xl border border-[#eadfce] bg-white px-3 py-2">
+          <Search className="h-4 w-4 text-[#b7c3cd]" />
+          <input
+            id="message-conversation-search"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search here"
+            className="w-full bg-transparent text-sm text-[#2f3e46] placeholder:text-[#9aa6b2] focus:outline-none"
+          />
+        </div>
         <EmptyState title="No conversations" description="Start a chat from a profile, project, or order." />
       </div>
     );
@@ -97,14 +101,18 @@ export default function ConversationList({ activeConversationId, onSelectConvers
 
   return (
     <div className="space-y-3">
-      <Input
-        id="message-conversation-search"
-        value={search}
-        onChange={(event) => setSearch(event.target.value)}
-        placeholder="Search conversations"
-      />
+      <div className="flex items-center gap-2 rounded-xl border border-[#eadfce] bg-white px-3 py-2">
+        <Search className="h-4 w-4 text-[#b7c3cd]" />
+        <input
+          id="message-conversation-search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder="Search here"
+          className="w-full bg-transparent text-sm text-[#2f3e46] placeholder:text-[#9aa6b2] focus:outline-none"
+        />
+      </div>
 
-      <div className="space-y-2">
+      <div className="space-y-1.5">
         {filteredConversations.map((conversation) => {
           const other = getOtherParticipant(conversation, user?.id || '');
           const isActive = activeConversationId === conversation._id;
@@ -115,10 +123,10 @@ export default function ConversationList({ activeConversationId, onSelectConvers
               key={conversation._id}
               type="button"
               onClick={() => onSelectConversation(conversation._id)}
-              className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition ${
+              className={`flex w-full items-center gap-3 rounded-xl border p-3 text-left transition ${
                 isActive
-                  ? 'border-black bg-zinc-100'
-                  : 'border-zinc-200 bg-white hover:border-zinc-300 hover:bg-zinc-50'
+                  ? 'border-[#d7e4d1] bg-[#eef5eb]'
+                  : 'border-transparent bg-transparent hover:border-[#eadfce] hover:bg-white'
               }`}
             >
               <Avatar
@@ -130,18 +138,18 @@ export default function ConversationList({ activeConversationId, onSelectConvers
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="truncate text-sm font-semibold text-zinc-900">{other?.fullName || 'Unknown user'}</p>
-                  <p className="shrink-0 text-xs text-zinc-500">
+                  <p className="truncate text-sm font-semibold text-[#1a2e45]">{other?.fullName || 'Unknown user'}</p>
+                  <p className="shrink-0 text-xs text-[#8b96a2]">
                     {conversation.lastMessage?.createdAt
                       ? formatDate(conversation.lastMessage.createdAt, 'dd MMM, hh:mm a')
                       : '--'}
                   </p>
                 </div>
-                <p className="truncate text-xs text-zinc-600">{truncateText(preview, 40)}</p>
+                <p className="truncate text-xs text-[#5f7285]">{truncateText(preview, 40)}</p>
               </div>
 
               {conversation.unreadCount > 0 ? (
-                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-600 px-1.5 text-xs font-semibold text-white">
+                <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-[#8fae8e] px-1.5 text-xs font-semibold text-white">
                   {conversation.unreadCount}
                 </span>
               ) : null}

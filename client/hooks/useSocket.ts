@@ -27,8 +27,28 @@ interface TypingEvent {
 
 let socketInstance: Socket | null = null;
 let subscribers = 0;
+let blockedAuthKey = '';
+let isAuthBlocked = false;
+let latestAuthKey = '';
 
 const getSocketUrl = (): string => process.env.NEXT_PUBLIC_SOCKET_URL || 'http://localhost:5000';
+
+const getSocketErrorStatus = (error: unknown): number | null => {
+  const candidate = error as {
+    status?: number;
+    data?: { statusCode?: number };
+    description?: { status?: number };
+    context?: { status?: number };
+  };
+
+  const status =
+    candidate?.status ??
+    candidate?.data?.statusCode ??
+    candidate?.description?.status ??
+    candidate?.context?.status;
+
+  return typeof status === 'number' ? status : null;
+};
 
 export const useSocket = () => {
   const { initialized, isAuthenticated, user, accessToken } = useAuth();
@@ -45,31 +65,59 @@ export const useSocket = () => {
   useEffect(() => {
     subscribers += 1;
 
-    const token = accessToken || '';
-    const userId = user?.id || '';
-    const shouldConnect = Boolean(initialized && isAuthenticated && token && userId);
+    return () => {
+      subscribers = Math.max(subscribers - 1, 0);
 
-    if (!shouldConnect) {
-      if (socketInstance) {
+      if (subscribers === 0 && socketInstance) {
         socketInstance.disconnect();
         socketInstance = null;
       }
+    };
+  }, []);
 
-      subscribers = Math.max(subscribers - 1, 0);
+  useEffect(() => {
+    const storeState = authStore.getState();
+    const token = String(accessToken || storeState.accessToken || '').trim();
+    const authUser = user || storeState.user;
+    const userId = String(authUser?.id || authUser?._id || '').trim();
+    const shouldConnect = Boolean(initialized && isAuthenticated && token && userId);
+    const authKey = `${userId}:${token}`;
+
+    latestAuthKey = authKey;
+
+    if (isAuthBlocked && blockedAuthKey && blockedAuthKey !== authKey) {
+      isAuthBlocked = false;
+      blockedAuthKey = '';
+    }
+
+    if (!shouldConnect) {
+      if (socketInstance) {
+        socketInstance.io.opts.reconnection = false;
+        socketInstance.disconnect();
+      }
+
       setIsConnected(false);
-      return () => {
-        void 0;
-      };
+      return;
+    }
+
+    if (isAuthBlocked && blockedAuthKey === authKey) {
+      setIsConnected(false);
+      return;
     }
 
     if (!socketInstance) {
       socketInstance = io(getSocketUrl(), {
+        autoConnect: false,
         withCredentials: true,
-        transports: ['websocket', 'polling'],
+        transports: ['polling', 'websocket'],
         upgrade: true,
-        auth: (cb) => {
-          const liveToken = authStore.getState().accessToken || token;
-          cb({ token: liveToken });
+        reconnection: true,
+        reconnectionAttempts: 5,
+        auth: {
+          token,
+        },
+        query: {
+          token,
         },
       });
 
@@ -89,7 +137,20 @@ export const useSocket = () => {
         setIsConnected(false);
 
         const message = String(error?.message || '').toLowerCase();
-        if (message.includes('unauthorized')) {
+        const statusCode = getSocketErrorStatus(error);
+        const shouldBlock =
+          statusCode === 400 ||
+          statusCode === 401 ||
+          message.includes('unauthorized') ||
+          message.includes('authentication') ||
+          message.includes('invalid token');
+
+        if (shouldBlock) {
+          isAuthBlocked = true;
+          blockedAuthKey = latestAuthKey;
+          if (socketInstance) {
+            socketInstance.io.opts.reconnection = false;
+          }
           socketInstance?.disconnect();
         }
       });
@@ -138,18 +199,24 @@ export const useSocket = () => {
         }
         setTypingUser(payload.conversationId, payload.userId, false);
       });
-    } else if (socketInstance.connected && userId) {
-      socketInstance.emit('register_user', { userId });
-    }
+    } else {
+      const liveToken = String(authStore.getState().accessToken || token || '').trim();
+      socketInstance.auth = {
+        token: liveToken,
+      };
 
-    return () => {
-      subscribers -= 1;
-      if (subscribers <= 0 && socketInstance) {
-        socketInstance.disconnect();
-        socketInstance = null;
-        subscribers = 0;
+      socketInstance.io.opts.query = {
+        token: liveToken,
+      };
+
+      socketInstance.io.opts.reconnection = true;
+
+      if (!socketInstance.connected) {
+        socketInstance.connect();
+      } else if (userId) {
+        socketInstance.emit('register_user', { userId });
       }
-    };
+    }
   }, [
     accessToken,
     addMessage,

@@ -3,6 +3,7 @@ import mongoose from 'mongoose';
 import { io, toUserRoomId } from '../config/socket.js';
 import { asyncHandler } from '../middleware/error.middleware.js';
 import Notification from '../models/Notification.model.js';
+import User from '../models/User.model.js';
 import ApiError from '../utils/ApiError.js';
 import ApiResponse from '../utils/ApiResponse.js';
 
@@ -65,15 +66,42 @@ const getNotifications = asyncHandler(async (req, res) => {
 	}
 
 	const [notifications, totalCount, unreadCount] = await Promise.all([
-		Notification.find(filters)
-			.populate('sender', 'fullName avatar')
-			.sort({ createdAt: -1 })
-			.skip(skip)
-			.limit(limit)
-			.lean(),
+		Notification.find(filters).sort({ createdAt: -1 }).skip(skip).limit(limit).lean(),
 		Notification.countDocuments(filters),
 		Notification.countDocuments({ recipient: req.user._id, isRead: false }),
 	]);
+
+	const senderIds = [
+		...new Set(
+			notifications
+				.map((notification) => notification?.sender)
+				.filter((senderId) => mongoose.Types.ObjectId.isValid(senderId))
+				.map((senderId) => String(senderId)),
+		),
+	];
+
+	const senderUsers = senderIds.length
+		? await User.find({ _id: { $in: senderIds } }).select('fullName avatar').lean()
+		: [];
+
+	const senderMap = new Map(senderUsers.map((user) => [String(user._id), user]));
+
+	const hydratedNotifications = notifications.map((notification) => {
+		const senderId = notification?.sender ? String(notification.sender) : '';
+		const sender = senderMap.get(senderId);
+
+		return {
+			...notification,
+			sender:
+				sender && senderId
+					? {
+						_id: sender._id,
+						fullName: sender.fullName,
+						avatar: sender.avatar,
+					}
+					: undefined,
+		};
+	});
 
 	const totalPages = Math.max(Math.ceil(totalCount / limit), 1);
 
@@ -81,7 +109,7 @@ const getNotifications = asyncHandler(async (req, res) => {
 		new ApiResponse(
 			200,
 			{
-				notifications: notifications.map(toNotificationPayload),
+				notifications: hydratedNotifications.map(toNotificationPayload),
 				totalCount,
 				unreadCount,
 				currentPage: page,

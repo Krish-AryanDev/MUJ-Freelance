@@ -14,8 +14,9 @@ const NOTIFICATION_QUERY_LIMIT = 20;
 
 export const useNotifications = () => {
   const queryClient = useQueryClient();
-  const { isAuthenticated } = useAuth();
+  const { initialized, isAuthenticated, isLoading: isAuthLoading, user } = useAuth();
   const { socket } = useSocket();
+  const canFetchProtectedData = Boolean(initialized && isAuthenticated && !isAuthLoading && user?.id);
 
   const notifications = useNotificationStore((state) => state.notifications);
   const unreadCount = useNotificationStore((state) => state.unreadCount);
@@ -36,7 +37,7 @@ export const useNotifications = () => {
   const notificationsQuery = useQuery({
     queryKey: ['notifications'],
     queryFn: () => notificationService.getNotifications({ page: 1, limit: NOTIFICATION_QUERY_LIMIT }),
-    enabled: isAuthenticated,
+    enabled: canFetchProtectedData,
     staleTime: 45000,
     retry: (failureCount, error) => {
       if (isServiceUnavailableError(error)) {
@@ -58,7 +59,7 @@ export const useNotifications = () => {
   const unreadCountQuery = useQuery({
     queryKey: ['notificationUnreadCount'],
     queryFn: notificationService.getUnreadCount,
-    enabled: isAuthenticated,
+    enabled: canFetchProtectedData,
     staleTime: 10000,
     retry: (failureCount, error) => {
       if (isServiceUnavailableError(error)) {
@@ -82,7 +83,7 @@ export const useNotifications = () => {
   }, [notificationsQuery.isLoading, setIsLoading]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!canFetchProtectedData) {
       reset();
       return;
     }
@@ -97,7 +98,7 @@ export const useNotifications = () => {
     setCurrentPage(data.currentPage || 1);
     setHasMore((data.currentPage || 1) < (data.totalPages || 1));
   }, [
-    isAuthenticated,
+    canFetchProtectedData,
     notificationsQuery.data,
     reset,
     setCurrentPage,
@@ -107,7 +108,7 @@ export const useNotifications = () => {
   ]);
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (!canFetchProtectedData) {
       return;
     }
 
@@ -116,10 +117,10 @@ export const useNotifications = () => {
     }
 
     setUnreadCount(unreadCountQuery.data.data.count || 0);
-  }, [isAuthenticated, setUnreadCount, unreadCountQuery.data]);
+  }, [canFetchProtectedData, setUnreadCount, unreadCountQuery.data]);
 
   useEffect(() => {
-    if (!socket || !isAuthenticated) {
+    if (!socket || !canFetchProtectedData) {
       return;
     }
 
@@ -137,7 +138,7 @@ export const useNotifications = () => {
     return () => {
       socket.off('new_notification', handleNewNotification);
     };
-  }, [addNotification, incrementUnreadCount, isAuthenticated, socket]);
+  }, [addNotification, canFetchProtectedData, incrementUnreadCount, socket]);
 
   const markAsReadMutation = useMutation({
     mutationFn: notificationService.markAsRead,

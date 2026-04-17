@@ -43,7 +43,7 @@ const isLinkActive = (pathname: string, href: string): boolean => {
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, logout, isLoading } = useAuth();
+  const { user, isAuthenticated, initialized, logout, isLoading } = useAuth();
   const { isConnected } = useSocket();
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
@@ -56,11 +56,12 @@ export default function Navbar() {
   const isAdmin = Boolean(user?.roles?.includes('admin'));
   const dashboardHref = hasFreelancerRole ? '/dashboard/freelancer' : '/dashboard/client';
   const userInitial = (user?.fullName || user?.email || 'U').trim().charAt(0).toUpperCase();
+  const canFetchProtectedData = Boolean(initialized && isAuthenticated && !isLoading && user?.id);
 
   const unreadQuery = useQuery({
     queryKey: ['messages', 'unread-count', user?.id || ''],
     queryFn: messageService.getUnreadCount,
-    enabled: isAuthenticated,
+    enabled: canFetchProtectedData,
     staleTime: 15000,
     retry: (failureCount, error) => {
       if (isServiceUnavailableError(error)) {
@@ -84,7 +85,7 @@ export default function Navbar() {
   const profileCompletionQuery = useQuery({
     queryKey: ['profile', 'completion', user?.id || ''],
     queryFn: getProfileCompletionTips,
-    enabled: isAuthenticated,
+    enabled: canFetchProtectedData,
     retry: (failureCount, error) => {
       if (isServiceUnavailableError(error)) {
         return false;
