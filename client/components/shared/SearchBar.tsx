@@ -36,7 +36,12 @@ export default function SearchBar({
       <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-zinc-500">
         🔍
       </span>
+      <label htmlFor="shared-search-bar" className="sr-only">
+        Search
+      </label>
       <input
+        id="shared-search-bar"
+        name="search"
         type="search"
         value={currentValue}
         onChange={(event) => {

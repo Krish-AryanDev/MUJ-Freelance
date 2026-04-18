@@ -67,7 +67,7 @@ const userSchema = new Schema(
 		roles: {
 			type: [String],
 			enum: USER_ROLES,
-			default: ['client'],
+			default: ['client', 'freelancer'],
 			validate: {
 				validator: (value) => Array.isArray(value) && value.length > 0,
 				message: 'At least one role is required',

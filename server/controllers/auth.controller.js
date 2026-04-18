@@ -67,7 +67,7 @@ const issueAuthTokens = async ({ user, res, updateLastLogin = true }) => {
 };
 
 const register = asyncHandler(async (req, res) => {
-	const { name, email, password, roles } = req.body;
+	const { name, email, password } = req.body;
 
 	if (!name || !email || !password) {
 		throw new ApiError(400, 'Name, email, and password are required');
@@ -85,7 +85,7 @@ const register = asyncHandler(async (req, res) => {
 		fullName: String(name).trim(),
 		email: normalizedEmail,
 		password: hashedPassword,
-		roles: Array.isArray(roles) && roles.length ? roles : undefined,
+		roles: ['client', 'freelancer'],
 	});
 
 	const user = await User.findById(createdUser._id).select('-password -refreshToken').lean();
@@ -227,10 +227,6 @@ const sendVerificationOtp = asyncHandler(async (req, res) => {
 		email: normalizedEmail,
 		expiresAt: otpExpiry.toISOString(),
 	};
-
-	if (process.env.NODE_ENV !== 'production') {
-		responseData.devOtp = otp;
-	}
 
 	return res
 		.status(200)

@@ -86,8 +86,12 @@ export default function ConversationList({ activeConversationId, onSelectConvers
       <div className="space-y-3">
         <div className="flex items-center gap-2 rounded-xl border border-[#eadfce] bg-white px-3 py-2">
           <Search className="h-4 w-4 text-[#b7c3cd]" />
+          <label htmlFor="message-conversation-search" className="sr-only">
+            Search conversations
+          </label>
           <input
             id="message-conversation-search"
+            name="conversationSearch"
             value={search}
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search here"
@@ -103,8 +107,12 @@ export default function ConversationList({ activeConversationId, onSelectConvers
     <div className="space-y-3">
       <div className="flex items-center gap-2 rounded-xl border border-[#eadfce] bg-white px-3 py-2">
         <Search className="h-4 w-4 text-[#b7c3cd]" />
+        <label htmlFor="message-conversation-search" className="sr-only">
+          Search conversations
+        </label>
         <input
           id="message-conversation-search"
+          name="conversationSearch"
           value={search}
           onChange={(event) => setSearch(event.target.value)}
           placeholder="Search here"

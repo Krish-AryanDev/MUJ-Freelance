@@ -1,4 +1,4 @@
-import { forwardRef } from 'react';
+import { forwardRef, useId } from 'react';
 import type { SelectHTMLAttributes } from 'react';
 
 import { classNames } from '../../utils/helpers';
@@ -22,6 +22,7 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
     error,
     hint,
     id,
+    name,
     className,
     options,
     children,
@@ -29,16 +30,21 @@ const Select = forwardRef<HTMLSelectElement, SelectProps>(function Select(
   },
   ref,
 ) {
+  const fallbackId = useId();
+  const resolvedId = id || `select-${fallbackId.replace(/:/g, '')}`;
+  const resolvedName = name || resolvedId;
+
   return (
     <div className="space-y-1">
       {label ? (
-        <label htmlFor={id} className="text-sm font-medium text-zinc-900">
+        <label htmlFor={resolvedId} className="text-sm font-medium text-zinc-900">
           {label}
         </label>
       ) : null}
 
       <select
-        id={id}
+        id={resolvedId}
+        name={resolvedName}
         ref={ref}
         className={classNames(
           'w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none ring-black/20 transition focus:ring-2',

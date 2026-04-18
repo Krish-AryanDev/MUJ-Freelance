@@ -1,4 +1,4 @@
-import { forwardRef, type TextareaHTMLAttributes } from 'react';
+import { forwardRef, useId, type TextareaHTMLAttributes } from 'react';
 
 import { classNames } from '../../utils/helpers';
 
@@ -9,20 +9,25 @@ interface TextareaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
 }
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(function Textarea(
-  { label, error, hint, id, className, rows = 4, ...props },
+  { label, error, hint, id, name, className, rows = 4, ...props },
   ref,
 ) {
+  const fallbackId = useId();
+  const resolvedId = id || `textarea-${fallbackId.replace(/:/g, '')}`;
+  const resolvedName = name || resolvedId;
+
   return (
     <div className="space-y-1">
       {label ? (
-        <label htmlFor={id} className="text-sm font-medium text-zinc-900">
+        <label htmlFor={resolvedId} className="text-sm font-medium text-zinc-900">
           {label}
         </label>
       ) : null}
 
       <textarea
         ref={ref}
-        id={id}
+        id={resolvedId}
+        name={resolvedName}
         rows={rows}
         className={classNames(
           'w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none ring-black/20 transition placeholder:text-zinc-400 focus:ring-2',

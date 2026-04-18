@@ -168,10 +168,10 @@ export default function BasicInfoForm({
 
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-zinc-800">Avatar</p>
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100">
+                  <label htmlFor="avatar-upload" className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100">
                     <Camera className="h-3.5 w-3.5" />
                     {isUploadingAvatar ? 'Uploading...' : 'Change'}
-                    <input type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
+                    <input id="avatar-upload" name="avatar" type="file" accept="image/*" className="hidden" onChange={handleAvatarChange} />
                   </label>
                 </div>
               </div>
@@ -192,10 +192,10 @@ export default function BasicInfoForm({
 
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-zinc-800">Cover</p>
-                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100">
+                  <label htmlFor="cover-upload" className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-zinc-300 bg-white px-2.5 py-1.5 text-xs font-medium text-zinc-700 hover:bg-zinc-100">
                     <ImageIcon className="h-3.5 w-3.5" />
                     {isUploadingCover ? 'Uploading...' : 'Change'}
-                    <input type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
+                    <input id="cover-upload" name="cover" type="file" accept="image/*" className="hidden" onChange={handleCoverChange} />
                   </label>
                 </div>
               </div>

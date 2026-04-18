@@ -76,12 +76,8 @@ export default function OtpForm({ className, email, onSuccess, redirectTo }: Otp
     setIsResending(true);
 
     try {
-      const data = await sendVerificationOtp({ email: resolvedEmail });
-      setInfoMessage(
-        data.devOtp
-          ? `A new OTP has been sent. (Dev OTP: ${data.devOtp})`
-          : 'A new OTP has been sent to your email.',
-      );
+      await sendVerificationOtp({ email: resolvedEmail });
+      setInfoMessage('A new OTP has been sent to your email.');
     } catch (resendError) {
       setFieldError(resendError instanceof Error ? resendError.message : 'Failed to resend OTP');
     } finally {
@@ -90,14 +86,30 @@ export default function OtpForm({ className, email, onSuccess, redirectTo }: Otp
   };
 
   return (
-    <form onSubmit={handleSubmit} className={classNames('space-y-4 rounded-lg border p-6', className)}>
-      <h2 className="text-2xl font-semibold">Verify email</h2>
-      <p className="text-sm opacity-80">
-        Enter the 6-digit OTP sent to <span className="font-medium">{resolvedEmail || 'your email'}</span>
-      </p>
+    <form
+      onSubmit={handleSubmit}
+      className={classNames(
+        'w-full max-w-[430px] space-y-5 rounded-[28px] border border-[#e6ece0] bg-[#f9fbf8] px-7 py-8 shadow-[0_16px_38px_rgba(51,76,51,0.15)] sm:px-9',
+        className,
+      )}
+    >
+      <div className="text-center">
+        <p className="inline-flex items-center gap-2 text-sm font-semibold text-[#28392f]">
+          <span className="inline-block h-2.5 w-2.5 rounded-[2px] bg-[#94d34a]" />
+          muj freelance
+        </p>
+        <h2 className="mt-4 text-[46px] font-black leading-[0.95] tracking-[-0.03em] text-[#2b3130]">
+          Verify
+          <br />
+          email
+        </h2>
+        <p className="mt-3 text-xs text-[#8d9b8c]">
+          Enter the 6-digit OTP sent to <span className="font-semibold text-[#4f5f4b]">{resolvedEmail || 'your email'}</span>
+        </p>
+      </div>
 
-      <div className="space-y-1">
-        <label htmlFor="otp-code" className="text-sm font-medium">
+      <div className="space-y-1.5">
+        <label htmlFor="otp-code" className="sr-only">
           OTP code
         </label>
         <input
@@ -109,7 +121,7 @@ export default function OtpForm({ className, email, onSuccess, redirectTo }: Otp
           autoComplete="one-time-code"
           value={otp}
           onChange={(event) => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
-          className="w-full rounded-md border px-3 py-2 tracking-[0.35em]"
+          className="w-full rounded-full border border-[#dce5d8] bg-white px-4 py-3 text-sm tracking-[0.35em] text-[#2f3e46] placeholder:text-[#a8b6a7] focus:border-[#9dce69] focus:outline-none"
           placeholder="000000"
           disabled={disabled}
         />
@@ -121,23 +133,23 @@ export default function OtpForm({ className, email, onSuccess, redirectTo }: Otp
 
       <button
         type="submit"
-        className="w-full rounded-md bg-black px-4 py-2 text-white disabled:opacity-50"
+        className="w-full rounded-full bg-[#94d34a] px-4 py-3 text-sm font-semibold text-[#243029] transition-colors hover:bg-[#88c83d] disabled:opacity-50"
         disabled={disabled}
       >
         {disabled ? 'Verifying...' : 'Verify OTP'}
       </button>
 
-      <div className="flex items-center justify-between text-sm">
+      <div className="flex items-center justify-between text-xs text-[#8d9b8c]">
         <button
           type="button"
           onClick={resendOtp}
-          className="underline disabled:opacity-50"
+          className="font-medium text-[#4f5f4b] underline disabled:opacity-50"
           disabled={isResending || disabled}
         >
           {isResending ? 'Resending...' : 'Resend OTP'}
         </button>
 
-        <Link href="/register" className="underline">
+        <Link href="/register" className="font-semibold text-[#4a8b2b] hover:text-[#3f7725]">
           Back to register
         </Link>
       </div>

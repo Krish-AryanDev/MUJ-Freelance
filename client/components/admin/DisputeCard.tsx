@@ -61,7 +61,12 @@ export default function DisputeCard({ dispute, onResolve }: DisputeCardProps) {
           <span className="font-medium">Reason:</span> {dispute.disputeReason || 'No reason provided.'}
         </p>
 
+        <label htmlFor={`resolution-note-${dispute._id}`} className="sr-only">
+          Resolution note
+        </label>
         <textarea
+          id={`resolution-note-${dispute._id}`}
+          name="resolutionNote"
           rows={3}
           className="w-full rounded-md border border-zinc-300 px-3 py-2 text-sm outline-none ring-0 focus:border-zinc-500"
           placeholder="Write a resolution note for both parties"

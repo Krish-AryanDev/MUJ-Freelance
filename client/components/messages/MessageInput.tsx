@@ -133,6 +133,9 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
         </button>
 
         <textarea
+          id="message-composer"
+          name="message"
+          aria-label="Message"
           ref={textareaRef}
           value={content}
           onChange={(event) => handleTyping(event.target.value)}
@@ -157,6 +160,9 @@ export default function MessageInput({ conversationId, onMessageSent }: MessageI
       ) : null}
 
       <input
+        id="message-attachment"
+        name="attachment"
+        aria-label="Attachment"
         ref={fileInputRef}
         type="file"
         accept="image/*,.pdf,.doc,.docx"

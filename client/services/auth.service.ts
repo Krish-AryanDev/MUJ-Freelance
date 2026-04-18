@@ -36,7 +36,6 @@ interface SendVerificationOtpPayload {
 interface SendVerificationOtpResponse {
   email: string;
   expiresAt: string;
-  devOtp?: string;
 }
 
 interface VerifyEmailOtpResponse {
@@ -105,10 +104,6 @@ const register = async (payload: RegisterPayload): Promise<LoginResponse> => {
       name: payload.name,
       email: payload.email,
       password: payload.password,
-      enrollmentNo: payload.enrollmentNo,
-      branch: payload.branch,
-      semester: payload.semester,
-      role: payload.role,
     });
 
     return mapAuthPayload(unwrapResponse(response));

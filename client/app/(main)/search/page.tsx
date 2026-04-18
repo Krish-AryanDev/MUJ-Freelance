@@ -94,8 +94,12 @@ export default function Page() {
         </div>
 
         <div className="xl:col-span-1">
-          <label className="mb-1 block text-sm font-medium text-zinc-900">Budget Min</label>
+          <label htmlFor="search-budget-min" className="mb-1 block text-sm font-medium text-zinc-900">
+            Budget Min
+          </label>
           <input
+            id="search-budget-min"
+            name="budgetMin"
             type="number"
             min={0}
             value={budgetMin ?? ''}
@@ -108,8 +112,12 @@ export default function Page() {
         </div>
 
         <div className="xl:col-span-1">
-          <label className="mb-1 block text-sm font-medium text-zinc-900">Budget Max</label>
+          <label htmlFor="search-budget-max" className="mb-1 block text-sm font-medium text-zinc-900">
+            Budget Max
+          </label>
           <input
+            id="search-budget-max"
+            name="budgetMax"
             type="number"
             min={0}
             value={budgetMax ?? ''}

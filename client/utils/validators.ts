@@ -52,15 +52,6 @@ export const registerSchema = z
     name: z.string().trim().min(2, 'Name must be at least 2 characters long'),
     email: mujEmailSchema,
     password: passwordSchema,
-    enrollmentNo: z
-      .string()
-      .trim()
-      .min(4, 'Enrollment number must be at least 4 characters long')
-      .max(30, 'Enrollment number must be at most 30 characters long')
-      .regex(/^[A-Za-z0-9-]+$/, 'Enrollment number can only contain letters, numbers, and hyphens'),
-    branch: z.string().trim().min(2, 'Branch is required'),
-    semester: z.coerce.number().int('Semester must be a whole number').min(1).max(12),
-    role: z.enum(['client', 'freelancer']),
     confirmPassword: z.string().min(1, 'Please confirm your password'),
   })
   .refine((data) => data.password === data.confirmPassword, {

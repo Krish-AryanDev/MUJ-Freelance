@@ -174,10 +174,6 @@ export interface RegisterRequest {
   email: string;
   password: string;
   confirmPassword: string;
-  enrollmentNo: string;
-  branch: string;
-  semester: number;
-  role: Exclude<UserRole, 'admin'>;
 }
 
 export interface RegisterResponse {

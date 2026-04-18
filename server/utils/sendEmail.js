@@ -9,10 +9,10 @@ const getTransporter = () => {
 		return transporter;
 	}
 
-	const smtpHost = process.env.SMTP_HOST;
+	const smtpHost = String(process.env.SMTP_HOST || '').trim();
 	const smtpPort = Number(process.env.SMTP_PORT || 587);
-	const smtpUser = process.env.SMTP_USER;
-	const smtpPass = process.env.SMTP_PASS;
+	const smtpUser = String(process.env.SMTP_USER || '').trim();
+	const smtpPass = String(process.env.SMTP_PASS || '').replace(/\s+/g, '');
 
 	if (!smtpHost || !smtpUser || !smtpPass) {
 		throw new ApiError(500, 'SMTP configuration is incomplete');

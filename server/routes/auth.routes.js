@@ -35,11 +35,6 @@ const registerValidation = [
 		.withMessage('Password is required')
 		.isLength({ min: 8 })
 		.withMessage('Password must be at least 8 characters long'),
-	body('roles').optional().isArray({ min: 1 }).withMessage('Roles must be a non-empty array'),
-	body('roles.*')
-		.optional()
-		.isIn(['client', 'freelancer', 'admin'])
-		.withMessage('Each role must be one of client, freelancer, admin'),
 ];
 
 const loginValidation = [

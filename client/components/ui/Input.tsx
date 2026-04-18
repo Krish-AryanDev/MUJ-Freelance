@@ -1,4 +1,4 @@
-import { forwardRef, type InputHTMLAttributes } from 'react';
+import { forwardRef, useId, type InputHTMLAttributes } from 'react';
 
 import { classNames } from '../../utils/helpers';
 
@@ -9,20 +9,25 @@ interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 }
 
 const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
-  { label, error, hint, id, className, ...props },
+  { label, error, hint, id, name, className, ...props },
   ref,
 ) {
+  const fallbackId = useId();
+  const resolvedId = id || `input-${fallbackId.replace(/:/g, '')}`;
+  const resolvedName = name || resolvedId;
+
   return (
     <div className="space-y-1">
       {label ? (
-        <label htmlFor={id} className="text-sm font-medium text-zinc-900">
+        <label htmlFor={resolvedId} className="text-sm font-medium text-zinc-900">
           {label}
         </label>
       ) : null}
 
       <input
         ref={ref}
-        id={id}
+        id={resolvedId}
+        name={resolvedName}
         className={classNames(
           'w-full rounded-md border border-zinc-300 bg-transparent px-3 py-2 text-sm outline-none ring-black/20 transition placeholder:text-zinc-400 focus:ring-2',
           error ? 'border-red-500 focus:ring-red-300' : '',
