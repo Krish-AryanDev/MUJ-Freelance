@@ -16,10 +16,81 @@ interface RetryableRequestConfig extends InternalAxiosRequestConfig {
 interface RefreshTokenResponse {
   success: boolean;
   message: string;
+  data?: {
+    accessToken?: string;
+  };
 }
 
 let isRefreshing = false;
 let pendingRequests: Array<() => void> = [];
+
+const getStoredAccessToken = (): string => {
+  const token = authStore.getState().accessToken;
+  return typeof token === 'string' ? token.trim() : '';
+};
+
+const hasAuthorizationHeader = (config: InternalAxiosRequestConfig): boolean => {
+  const headers = config.headers as
+    | {
+        get?: (name: string) => string | undefined;
+        Authorization?: string;
+        authorization?: string;
+      }
+    | undefined;
+
+  if (!headers) {
+    return false;
+  }
+
+  if (typeof headers.get === 'function') {
+    return Boolean(headers.get('Authorization'));
+  }
+
+  return Boolean(headers.Authorization || headers.authorization);
+};
+
+const setAuthorizationHeader = (
+  config: InternalAxiosRequestConfig,
+  accessToken: string | null,
+): void => {
+  if (!config.headers) {
+    return;
+  }
+
+  const headers = config.headers as
+    | {
+        set?: (name: string, value: string) => void;
+        delete?: (name: string) => void;
+        Authorization?: string;
+        authorization?: string;
+      }
+    | undefined;
+
+  if (!headers) {
+    return;
+  }
+
+  if (typeof headers.set === 'function') {
+    if (accessToken) {
+      headers.set('Authorization', `Bearer ${accessToken}`);
+      return;
+    }
+
+    if (typeof headers.delete === 'function') {
+      headers.delete('Authorization');
+    }
+
+    return;
+  }
+
+  if (accessToken) {
+    headers.Authorization = `Bearer ${accessToken}`;
+    return;
+  }
+
+  delete headers.Authorization;
+  delete headers.authorization;
+};
 
 const resolvePendingRequests = (): void => {
   pendingRequests.forEach((callback) => callback());
@@ -46,7 +117,16 @@ const refreshClient: AxiosInstance = axios.create({
 });
 
 apiClient.interceptors.request.use(
-  (config) => config,
+  (config) => {
+    if (!hasAuthorizationHeader(config)) {
+      const accessToken = getStoredAccessToken();
+      if (accessToken) {
+        setAuthorizationHeader(config, accessToken);
+      }
+    }
+
+    return config;
+  },
   (error: unknown) => Promise.reject(error),
 );
 
@@ -83,7 +163,19 @@ apiClient.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      await refreshClient.post<RefreshTokenResponse>('/auth/refresh-token');
+      const refreshResponse = await refreshClient.post<RefreshTokenResponse>('/auth/refresh-token');
+      const refreshedAccessToken =
+        typeof refreshResponse.data?.data?.accessToken === 'string'
+          ? refreshResponse.data.data.accessToken.trim()
+          : '';
+
+      const currentUser = authStore.getState().user;
+      if (currentUser) {
+        authStore.setUser(currentUser, refreshedAccessToken);
+      }
+
+      setAuthorizationHeader(originalRequest, refreshedAccessToken || null);
+
       isRefreshing = false;
       resolvePendingRequests();
       return apiClient(originalRequest);

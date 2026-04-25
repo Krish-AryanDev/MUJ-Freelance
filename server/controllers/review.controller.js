@@ -327,18 +327,36 @@ const getUserReviews = asyncHandler(async (req, res) => {
 			isPublic: true,
 		};
 
-		const [reviews, totalReviews, averageSummary, ratingBreakdown] = await Promise.all([
-			Review.find(filters)
-				.populate({ path: 'reviewer', select: 'fullName avatar' })
-				.populate({ path: 'gig', select: 'title' })
-				.sort(sort)
-				.skip(skip)
-				.limit(limit)
-				.lean(),
+		const loadReviews = async (withPopulate) => {
+			let query = Review.find(filters).sort(sort).skip(skip).limit(limit);
+
+			if (withPopulate) {
+				query = query
+					.populate({ path: 'reviewer', select: 'fullName avatar' })
+					.populate({ path: 'gig', select: 'title' });
+			}
+
+			return query.lean();
+		};
+
+		const [totalReviews, averageSummary, ratingBreakdown] = await Promise.all([
 			Review.countDocuments(filters),
 			getAverageRating(filters),
 			getRatingBreakdown(filters),
 		]);
+
+		let reviews = [];
+
+		try {
+			reviews = await loadReviews(true);
+		} catch (queryError) {
+			if (queryError?.name !== 'CastError') {
+				throw queryError;
+			}
+
+			// Fallback for malformed legacy refs so public profile pages do not fail with 500.
+			reviews = await loadReviews(false);
+		}
 
 		const totalPages = Math.max(Math.ceil(totalReviews / limit), 1);
 
