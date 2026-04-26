@@ -27,7 +27,6 @@ import ExperienceForm from '@/components/profile/setup/ExperienceForm';
 import LanguagesForm from '@/components/profile/setup/LanguagesForm';
 import MujDetailsForm from '@/components/profile/setup/MujDetailsForm';
 import PortfolioForm from '@/components/profile/setup/PortfolioForm';
-import ProfileCompletionCard from '@/components/profile/setup/ProfileCompletionCard';
 import SkillsForm from '@/components/profile/setup/SkillsForm';
 import SocialLinksForm from '@/components/profile/setup/SocialLinksForm';
 import Button from '@/components/ui/Button';
@@ -57,18 +56,6 @@ const steps: SetupStep[] = [
   { id: 'muj', title: 'MUJ Details', points: 5, icon: School },
   { id: 'settings', title: 'Settings', points: 2, icon: Settings },
 ];
-
-const completionSectionToStepMap: Record<string, string> = {
-  avatar: 'basic',
-  tagline: 'basic',
-  about: 'about',
-  skills: 'skills',
-  education: 'education',
-  experience: 'experience',
-  portfolio: 'portfolio',
-  social: 'social',
-  rate: 'basic',
-};
 
 export default function ProfileSetupPage() {
   const router = useRouter();
@@ -111,7 +98,6 @@ export default function ProfileSetupPage() {
   }, [initialized, isAuthLoading, isAuthenticated, router]);
 
   const score = completion?.score || profile?.profileCompletionScore || 0;
-  const tips = completion?.tips || [];
 
   const completedStepSet = useMemo(() => {
     const set = new Set<string>();
@@ -169,6 +155,14 @@ export default function ProfileSetupPage() {
     }
 
     setActiveStepId(steps[activeStepIndex + 1].id);
+  };
+
+  const jumpToStep = (stepId: string) => {
+    if (!steps.some((step) => step.id === stepId)) {
+      return;
+    }
+
+    setActiveStepId(stepId);
   };
 
   const activeStep = steps[activeStepIndex] || steps[0];
@@ -347,9 +341,14 @@ export default function ProfileSetupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 via-white to-zinc-50 px-4 py-8 sm:px-6 lg:px-8">
-      <div className="mx-auto grid w-full max-w-7xl gap-6 lg:grid-cols-[300px_1fr]">
-        <aside className="space-y-4 rounded-2xl border border-zinc-200 bg-white p-4 shadow-sm lg:sticky lg:top-20 lg:h-fit">
+    <div className="relative min-h-screen bg-gradient-to-b from-orange-50 via-white to-zinc-50">
+      <div className="pointer-events-none absolute inset-0 opacity-60">
+        <div className="absolute -left-20 top-16 h-56 w-56 rounded-full bg-orange-100/60 blur-3xl" />
+        <div className="absolute right-6 top-28 h-64 w-64 rounded-full bg-amber-100/50 blur-3xl" />
+      </div>
+
+      <div className="relative mx-auto w-full max-w-[1600px] px-4 py-6 sm:px-6 lg:grid lg:min-h-[calc(100vh-8rem)] lg:grid-cols-[320px_minmax(0,1fr)] lg:items-start lg:gap-4 lg:px-8 lg:py-8">
+        <aside className="hidden h-full self-start space-y-4 rounded-2xl border border-zinc-200 bg-white/95 p-4 shadow-sm backdrop-blur lg:block">
           <div>
             <h1 className="text-xl font-bold text-zinc-900">Complete Your Profile</h1>
             <p className="text-sm text-zinc-600">Your profile is {score}% complete</p>
@@ -395,67 +394,85 @@ export default function ProfileSetupPage() {
           </div>
         </aside>
 
-        <section className="space-y-4">
-          {isLoading || !profile ? (
-            <div className="space-y-3">
-              <Skeleton className="h-36 rounded-xl" />
-              <Skeleton className="h-[420px] rounded-xl" />
-            </div>
-          ) : (
-            <>
-              <div className="grid gap-4 lg:grid-cols-[1fr_320px]">
-                <Card className="border-orange-200 bg-orange-50">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-2xl">
-                      <Sparkles className="h-6 w-6 text-orange-600" />
-                      {activeStep.title}
-                    </CardTitle>
-                    <CardDescription>
-                      Step {activeStepIndex + 1} of {steps.length}. This section adds up to {activeStep.points} points.
-                    </CardDescription>
-                  </CardHeader>
-                </Card>
+        <div className="w-full min-w-0 self-start lg:self-stretch">
+          <section className="space-y-4 lg:pt-0">
+            <Card className="border-zinc-200 bg-white shadow-sm lg:hidden">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg">Complete Your Profile</CardTitle>
+                <CardDescription>Your profile is {score}% complete</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <label className="space-y-2 text-sm font-medium text-zinc-800">
+                  <span>Jump to section</span>
+                  <select
+                    value={activeStepId}
+                    onChange={(event) => {
+                      jumpToStep(event.target.value);
+                    }}
+                    className="w-full rounded-xl border border-zinc-200 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition focus:border-orange-300 focus:ring-2 focus:ring-orange-100"
+                  >
+                    {steps.map((step) => (
+                      <option key={step.id} value={step.id}>
+                        {step.title} (+{step.points})
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </CardContent>
+            </Card>
 
-                <ProfileCompletionCard
-                  score={score}
-                  tips={tips}
-                  onTipClick={(section) => {
-                    const stepId = completionSectionToStepMap[section] || 'basic';
-                    setActiveStepId(stepId);
-                  }}
-                />
+            {isLoading || !profile ? (
+              <div className="space-y-3">
+                <Skeleton className="h-36 rounded-xl" />
+                <Skeleton className="h-[420px] rounded-xl" />
               </div>
-
-              {renderActiveSection()}
-
-              <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white p-4">
-                <Button variant="outline" onClick={goToPrevStep} disabled={activeStepIndex <= 0}>
-                  Previous Step
-                </Button>
-
-                <div className="flex items-center gap-2">
-                  <BadgeCheck className="h-4 w-4 text-green-600" />
-                  <span className="text-sm text-zinc-600">Keep going, you are making your profile stronger.</span>
+            ) : (
+              <>
+                <div className="w-full">
+                  <Card className="border-orange-200 bg-orange-50">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-2xl">
+                        <Sparkles className="h-6 w-6 text-orange-600" />
+                        {activeStep.title}
+                      </CardTitle>
+                      <CardDescription>
+                        Step {activeStepIndex + 1} of {steps.length}. This section adds up to {activeStep.points} points.
+                      </CardDescription>
+                    </CardHeader>
+                  </Card>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" onClick={goToNextStep} disabled={activeStepIndex >= steps.length - 1}>
-                    Next Step
+                {renderActiveSection()}
+
+                <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-zinc-200 bg-white p-4 shadow-sm">
+                  <Button variant="outline" onClick={goToPrevStep} disabled={activeStepIndex <= 0}>
+                    Previous Step
                   </Button>
-                  {score > 50 ? (
-                    <Button
-                      onClick={() => {
-                        router.push(`/profile/${profile.user?.id || profile.user?._id}`);
-                      }}
-                    >
-                      View My Profile
+
+                  <div className="flex items-center gap-2">
+                    <BadgeCheck className="h-4 w-4 text-green-600" />
+                    <span className="text-sm text-zinc-600">Keep going, you are making your profile stronger.</span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button variant="outline" onClick={goToNextStep} disabled={activeStepIndex >= steps.length - 1}>
+                      Next Step
                     </Button>
-                  ) : null}
+                    {score > 50 ? (
+                      <Button
+                        onClick={() => {
+                          router.push(`/profile/${profile.user?.id || profile.user?._id}`);
+                        }}
+                      >
+                        View My Profile
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
-              </div>
-            </>
-          )}
-        </section>
+              </>
+            )}
+            </section>
+        </div>
       </div>
     </div>
   );

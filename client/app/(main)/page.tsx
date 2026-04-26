@@ -102,37 +102,7 @@ export default function HomePage() {
                 for real outcomes.
               </p>
 
-              <form onSubmit={submitSearch} className="mt-8 flex max-w-2xl flex-col gap-3 sm:flex-row sm:gap-0">
-                <input
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Search for any service..."
-                  className="flex-1 rounded-2xl border border-[#d8deeb] bg-white px-5 py-4 text-base text-[#0f172a] outline-none transition focus:border-[#2563eb] focus:ring-4 focus:ring-[#2563eb]/15 sm:rounded-r-none"
-                />
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#0b1220] px-7 py-4 text-base font-semibold text-white transition hover:bg-[#172033] sm:rounded-l-none"
-                >
-                  <Search className="h-4.5 w-4.5" />
-                  Search
-                </button>
-              </form>
-
-              <div className="mt-4 flex flex-wrap items-center gap-2 text-sm text-[#64748b]">
-                <span className="font-medium text-[#334155]">Popular</span>
-                {popularSearches.map((tag) => (
-                  <button
-                    key={tag}
-                    type="button"
-                    onClick={() => router.push(`/search?q=${encodeURIComponent(tag)}`)}
-                    className="rounded-full border border-[#d8deeb] bg-white px-3 py-1 transition hover:border-[#93c5fd] hover:text-[#1d4ed8]"
-                  >
-                    {tag}
-                  </button>
-                ))}
-              </div>
-
-              <div className="mt-7 flex flex-wrap gap-3">
+              <div className="mt-16 flex flex-wrap gap-3">
                 {isAuthenticated ? (
                   <>
                     <Link
