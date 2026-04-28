@@ -132,7 +132,7 @@ export default function NotificationBell() {
         onClick={() => {
           setIsOpen((current) => !current);
         }}
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-zinc-300 transition hover:bg-zinc-900 hover:text-white"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-md text-[#1a1a1a] transition hover:bg-white"
         aria-label="Notifications"
       >
         <Bell className="h-5 w-5" />

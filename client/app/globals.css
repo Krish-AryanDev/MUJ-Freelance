@@ -81,7 +81,13 @@ a {
 }
 
 .animate-marquee {
-  animation: marquee 20s linear infinite;
+  animation: marquee 10s linear infinite;
+}
+
+@media (min-width: 768px) {
+  .animate-marquee {
+    animation: marquee 20s linear infinite;
+  }
 }
 
 @keyframes card-body-gradient-shift {
@@ -101,4 +107,13 @@ a {
   animation: card-body-gradient-shift 16s ease-in-out infinite;
 }
 
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+}
 

@@ -183,8 +183,8 @@ export default function Navbar() {
         className={classNames(
           'relative inline-flex h-10 w-10 items-center justify-center rounded-full transition-colors',
           active
-            ? 'bg-zinc-800 text-white'
-            : 'text-zinc-300 hover:bg-zinc-800 hover:text-white',
+            ? 'bg-white text-[#1a1a1a] shadow-sm'
+            : 'text-[#6B7280] hover:bg-white hover:text-[#1a1a1a]',
         )}
       >
         <MessageSquare className="h-5 w-5" />
@@ -240,8 +240,8 @@ export default function Navbar() {
     <>
       <header
         className={classNames(
-          'fixed top-0 z-50 w-full bg-zinc-950/95 backdrop-blur transition-all duration-300',
-          isScrolled ? 'border-b border-zinc-800 shadow-[0_6px_20px_rgba(0,0,0,0.28)]' : 'border-b border-transparent shadow-none',
+          'fixed top-0 z-50 w-full bg-[#fff8ef] border-b border-black/10 backdrop-blur transition-all duration-300',
+          isScrolled ? 'shadow-[0_2px_8px_rgba(0,0,0,0.06)]' : 'shadow-none',
         )}
       >
         <div className="mx-auto flex h-16 w-full max-w-7xl items-center px-4 sm:px-6 lg:px-8">
@@ -251,7 +251,7 @@ export default function Navbar() {
                 MF
               </span>
               <span className="leading-tight">
-                <span className="block text-sm font-extrabold tracking-wide text-white">MUJ</span>
+                <span className="block text-sm font-extrabold tracking-wide text-[#1a1a1a]">MUJ</span>
                 <span className="block text-[10px] font-semibold tracking-[0.12em] text-[#fb923c]">FREELANCE</span>
               </span>
             </Link>
@@ -267,7 +267,7 @@ export default function Navbar() {
                   href={item.href}
                   className={classNames(
                     'group relative px-1 py-2 text-sm font-medium transition-colors',
-                    active ? 'text-white' : 'text-zinc-300 hover:text-white',
+                    active ? 'text-[#1a1a1a] font-bold' : 'text-[#6B7280] hover:text-[#1a1a1a] font-medium',
                   )}
                 >
                   {item.label}
@@ -291,7 +291,7 @@ export default function Navbar() {
                   <button
                     type="button"
                     onClick={() => setIsProfileOpen((previous) => !previous)}
-                    className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/80 px-1.5 py-1 text-zinc-200 transition hover:border-zinc-700 hover:bg-zinc-800"
+                    className="inline-flex items-center gap-2 rounded-full border border-black/10 bg-white px-1.5 py-1 text-[#1a1a1a] transition hover:border-black/20 shadow-sm"
                     aria-expanded={isProfileOpen}
                     aria-label="Open profile menu"
                   >
@@ -366,7 +366,7 @@ export default function Navbar() {
               <div className="hidden items-center gap-2 md:flex">
                 <Link
                   href="/login"
-                  className="rounded-md border border-zinc-700 px-3 py-2 text-sm font-medium text-zinc-200 transition hover:bg-zinc-800"
+                  className="rounded-md border border-black/10 bg-white px-3 py-2 text-sm font-medium text-[#1a1a1a] shadow-sm transition hover:bg-zinc-50"
                 >
                   Login
                 </Link>
@@ -384,7 +384,7 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() => setIsMobileOpen((previous) => !previous)}
-                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-zinc-200 transition hover:bg-zinc-800"
+                className="inline-flex h-9 w-9 items-center justify-center rounded-full text-[#1a1a1a] transition hover:bg-white"
                 aria-expanded={isMobileOpen}
                 aria-label="Toggle menu"
               >

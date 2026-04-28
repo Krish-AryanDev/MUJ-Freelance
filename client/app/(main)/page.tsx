@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import type { FormEvent } from 'react';
 import { useState } from 'react';
 
+import TopFreelancers from '../../components/home/TopFreelancers';
 import EmptyState from '../../components/shared/EmptyState';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -72,10 +73,9 @@ export default function HomePage() {
   ] as const;
 
   return (
-    <main className="min-h-screen bg-[#f4f6fb] text-[#0f172a]">
-      <section className="relative min-h-[calc(100vh-4rem)] bg-gradient-to-br from-orange-50 via-white to-blue-50 overflow-hidden flex flex-col">
+    <main className="min-h-screen bg-[#fff8ef] text-[#0f172a]">
+      <section className="relative min-h-[calc(100vh-4rem)] bg-[#fff8ef] overflow-hidden flex flex-col">
         <div className="pointer-events-none absolute inset-0">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_12%_8%,rgba(250,137,53,0.24),transparent_32%),radial-gradient(circle_at_82%_16%,rgba(37,99,235,0.18),transparent_34%),linear-gradient(180deg,#f7f8fc_0%,#f0f3f9_100%)]" />
           <div className="absolute -left-24 top-20 h-72 w-72 rounded-full border border-[#d6dbe7]" />
           <div className="absolute right-[-140px] top-[-110px] h-80 w-80 rounded-full border border-[#d6dbe7]" />
         </div>
@@ -137,7 +137,7 @@ export default function HomePage() {
               </div>
             </div>
 
-            <div className="relative lg:pl-8">
+            <div className="relative hidden lg:block lg:pl-8">
               <div className="rounded-[2rem] border border-[#d8deeb] bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.08)]">
                 <div className="rounded-3xl bg-[#0b1220] p-5 text-white">
                   <p className="text-xs uppercase tracking-[0.18em] text-white/70">Live Metrics</p>
@@ -231,7 +231,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#f4f6fb] px-4 py-14">
+      <section className="bg-[#fff8ef] px-4 py-14">
         <div className="mx-auto max-w-7xl">
           <div className="mb-8 flex items-end justify-between gap-4">
             <div>
@@ -261,18 +261,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="bg-[#f7f8fc] px-4 py-16">
-        <div className="mx-auto max-w-7xl">
-          <EmptyState
-            title="Discover top MUJ freelancers"
-            description="Explore complete freelancer profiles and connect directly for your requirements."
-            actionLabel="Browse Freelancers"
-            actionHref="/freelancers"
-          />
-        </div>
+      <section className="bg-[#fff8ef] px-4 py-16 overflow-hidden">
+        <TopFreelancers />
       </section>
 
-      <section className="bg-[#f7f8fc] px-4 py-16">
+      <section className="bg-[#fff8ef] px-4 py-16">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12 text-center">
             <h2 className="text-3xl font-black text-[#0f172a] sm:text-4xl">How MUJ Freelance Works</h2>
@@ -285,18 +278,16 @@ export default function HomePage() {
             <button
               type="button"
               onClick={() => setActiveTab('client')}
-              className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                activeTab === 'client' ? 'bg-[#0f172a] text-white' : 'text-[#64748b]'
-              }`}
+              className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === 'client' ? 'bg-[#0f172a] text-white' : 'text-[#64748b]'
+                }`}
             >
               I&apos;m a Client
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('freelancer')}
-              className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${
-                activeTab === 'freelancer' ? 'bg-[#0f172a] text-white' : 'text-[#64748b]'
-              }`}
+              className={`flex-1 rounded-full px-4 py-2 text-sm font-semibold transition ${activeTab === 'freelancer' ? 'bg-[#0f172a] text-white' : 'text-[#64748b]'
+                }`}
             >
               I&apos;m a Freelancer
             </button>

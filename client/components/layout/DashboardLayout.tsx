@@ -26,12 +26,16 @@ const dashboardItems = {
 
 export default function DashboardLayout({ children, mode = 'client' }: DashboardLayoutProps) {
   return (
-    <div className="min-h-screen bg-zinc-50">
+    <div className="min-h-screen bg-[#fff8ef]">
       <Navbar />
 
       <main className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[260px_1fr] lg:px-8">
         <Sidebar title="Dashboard" items={dashboardItems[mode]} />
-        <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">{children}</section>
+        {mode === 'client' ? (
+          <section className="rounded-xl border border-zinc-200 bg-white p-5 shadow-sm">{children}</section>
+        ) : (
+          <div className="flex-1 w-full">{children}</div>
+        )}
       </main>
 
       <Footer />
